@@ -20,6 +20,7 @@ export class TimesheetStateService {
   readonly saveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly isNavCollapsed = signal<boolean>(false);
 
   // Derived Computations
   readonly availableYears = computed<YearNodeDTO[]>(() => {
@@ -174,6 +175,14 @@ export class TimesheetStateService {
     this.recalculateClientSide(copy);
     this.activeMonthData.set(copy);
     this.saveSubject.next(copy);
+  }
+
+  toggleNavCollapsed() {
+    this.isNavCollapsed.update(v => !v);
+  }
+
+  setNavCollapsed(collapsed: boolean) {
+    this.isNavCollapsed.set(collapsed);
   }
 
   forceSave() {

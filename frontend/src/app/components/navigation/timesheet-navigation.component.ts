@@ -20,109 +20,194 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
     MatDialogModule
   ],
   template: `
-    <nav class="onenote-nav-container">
-      <!-- COLUMN 1: PROJECTS -->
-      <section class="nav-column projects-column">
-        <header class="column-header">
-          <span class="column-title">PROJEKTE</span>
-          <button mat-icon-button color="primary" (click)="openAddProjectDialog()" matTooltip="Neues Projekt (+ Projekt)" aria-label="Projekt hinzufügen">
-            <mat-icon>add</mat-icon>
-          </button>
-        </header>
+    <nav class="onenote-nav-container" [class.collapsed]="state.isNavCollapsed()">
+      @if (!state.isNavCollapsed()) {
+        <!-- COLUMN 1: PROJECTS -->
+        <section class="nav-column projects-column">
+          <header class="column-header">
+            <span class="column-title">PROJEKTE</span>
+            <button mat-icon-button color="primary" (click)="openAddProjectDialog()" matTooltip="Neues Projekt (+ Projekt)" aria-label="Projekt hinzufügen">
+              <mat-icon>add</mat-icon>
+            </button>
+          </header>
 
-        <div class="column-list">
-          @for (project of state.projects(); track project.name) {
-            <div
-              class="nav-item project-item"
-              [class.active]="state.selectedProject()?.name === project.name"
-              (click)="selectProject(project)">
-              <div class="item-content">
-                <span class="item-title">{{ project.name }}</span>
-                <span class="item-badge" [class.badge-hours]="project.template === 'WorkHours'" [class.badge-days]="project.template === 'PersonDays'">
-                  {{ project.template }}
-                </span>
+          <div class="column-list">
+            @for (project of state.projects(); track project.name) {
+              <div
+                class="nav-item project-item"
+                [class.active]="state.selectedProject()?.name === project.name"
+                (click)="selectProject(project)">
+                <div class="item-content">
+                  <span class="item-title">{{ project.name }}</span>
+                  <span class="item-badge" [class.badge-hours]="project.template === 'WorkHours'" [class.badge-days]="project.template === 'PersonDays'">
+                    {{ project.template }}
+                  </span>
+                </div>
+                <button
+                  mat-icon-button
+                  class="item-action-btn"
+                  (click)="openEditProjectDialog(project, $event)"
+                  matTooltip="Einstellungen"
+                  aria-label="Einstellungen">
+                  <mat-icon>settings</mat-icon>
+                </button>
               </div>
-              <button
-                mat-icon-button
-                class="item-action-btn"
-                (click)="openEditProjectDialog(project, $event)"
-                matTooltip="Einstellungen"
-                aria-label="Einstellungen">
-                <mat-icon>settings</mat-icon>
-              </button>
-            </div>
-          } @empty {
-            <div class="empty-hint">Keine Projekte konfiguriert.</div>
-          }
-        </div>
-      </section>
+            } @empty {
+              <div class="empty-hint">Keine Projekte konfiguriert.</div>
+            }
+          </div>
 
-      <!-- COLUMN 2: YEARS -->
-      <section class="nav-column years-column">
-        <header class="column-header">
-          <span class="column-title">JAHRE</span>
-          <button mat-icon-button color="primary" (click)="addNewYear()" matTooltip="Jahr hinzufügen (+ Jahr)" aria-label="Jahr hinzufügen">
-            <mat-icon>add</mat-icon>
-          </button>
-        </header>
+          <footer class="column-footer">
+            <button
+              mat-icon-button
+              class="collapse-toggle-btn"
+              (click)="state.toggleNavCollapsed()"
+              matTooltip="Seitenleiste einklappen"
+              aria-label="Seitenleiste einklappen">
+              <mat-icon>first_page</mat-icon>
+            </button>
+          </footer>
+        </section>
 
-        <div class="column-list">
-          @for (yearNode of state.availableYears(); track yearNode.year) {
-            <div
-              class="nav-item year-item"
-              [class.active]="state.selectedYear() === yearNode.year"
-              (click)="selectYear(yearNode.year)">
-              <div class="item-content">
-                <span class="item-title">{{ yearNode.year }}</span>
-                <span class="count-badge">
-                  {{ countExistingMonths(yearNode) }} / 12
-                </span>
+        <!-- COLUMN 2: YEARS -->
+        <section class="nav-column years-column">
+          <header class="column-header">
+            <span class="column-title">JAHRE</span>
+            <button mat-icon-button color="primary" (click)="addNewYear()" matTooltip="Jahr hinzufügen (+ Jahr)" aria-label="Jahr hinzufügen">
+              <mat-icon>add</mat-icon>
+            </button>
+          </header>
+
+          <div class="column-list">
+            @for (yearNode of state.availableYears(); track yearNode.year) {
+              <div
+                class="nav-item year-item"
+                [class.active]="state.selectedYear() === yearNode.year"
+                (click)="selectYear(yearNode.year)">
+                <div class="item-content">
+                  <span class="item-title">{{ yearNode.year }}</span>
+                  <span class="count-badge">
+                    {{ countExistingMonths(yearNode) }} / 12
+                  </span>
+                </div>
               </div>
-            </div>
-          } @empty {
-            <div class="empty-hint">-</div>
-          }
-        </div>
-      </section>
+            } @empty {
+              <div class="empty-hint">-</div>
+            }
+          </div>
 
-      <!-- COLUMN 3: MONTHS -->
-      <section class="nav-column months-column">
-        <header class="column-header">
-          <span class="column-title">MONATE</span>
-          <button mat-icon-button color="primary" (click)="goToCurrentMonth()" matTooltip="Aktueller Monat (+ Monat)" aria-label="Aktueller Monat">
-            <mat-icon>today</mat-icon>
-          </button>
-        </header>
+          <footer class="column-footer"></footer>
+        </section>
 
-        <div class="column-list">
-          @for (monthNode of state.availableMonths(); track monthNode.month) {
-            <div
-              class="nav-item month-item"
-              [class.active]="state.selectedMonth() === monthNode.month"
-              (click)="selectMonth(monthNode.month)">
-              <div class="item-content">
-                <span class="item-title">{{ formatMonthNumber(monthNode.month) }} - {{ monthNode.monthName }}</span>
-                @if (monthNode.exists) {
-                  <mat-icon class="status-icon exists-icon" matTooltip="CSV existiert">check_circle</mat-icon>
-                } @else {
-                  <mat-icon class="status-icon empty-icon" matTooltip="Wird bei Klick initialisiert">radio_button_unchecked</mat-icon>
-                }
+        <!-- COLUMN 3: MONTHS -->
+        <section class="nav-column months-column">
+          <header class="column-header">
+            <span class="column-title">MONATE</span>
+            <button mat-icon-button color="primary" (click)="goToCurrentMonth()" matTooltip="Aktueller Monat (+ Monat)" aria-label="Aktueller Monat">
+              <mat-icon>today</mat-icon>
+            </button>
+          </header>
+
+          <div class="column-list">
+            @for (monthNode of state.availableMonths(); track monthNode.month) {
+              <div
+                class="nav-item month-item"
+                [class.active]="state.selectedMonth() === monthNode.month"
+                (click)="selectMonth(monthNode.month)">
+                <div class="item-content">
+                  <span class="item-title">{{ formatMonthNumber(monthNode.month) }} - {{ monthNode.monthName }}</span>
+                  @if (monthNode.exists) {
+                    <mat-icon class="status-icon exists-icon" matTooltip="CSV existiert">check_circle</mat-icon>
+                  } @else {
+                    <mat-icon class="status-icon empty-icon" matTooltip="Wird bei Klick initialisiert">radio_button_unchecked</mat-icon>
+                  }
+                </div>
               </div>
-            </div>
-          } @empty {
-            <div class="empty-hint">-</div>
-          }
+            } @empty {
+              <div class="empty-hint">-</div>
+            }
+          </div>
+
+          <footer class="column-footer"></footer>
+        </section>
+      } @else {
+        <!-- COLLAPSED STRIP -->
+        <div class="collapsed-strip">
+          <div class="strip-spacer"></div>
+          <button
+            mat-icon-button
+            class="collapse-toggle-btn"
+            (click)="state.toggleNavCollapsed()"
+            matTooltip="Seitenleiste ausklappen"
+            aria-label="Seitenleiste ausklappen">
+            <mat-icon>last_page</mat-icon>
+          </button>
         </div>
-      </section>
+      }
     </nav>
   `,
   styles: [`
+    :host {
+      display: block;
+      height: 100%;
+    }
+
     .onenote-nav-container {
       display: flex;
       height: 100%;
       background: #f1f3f5;
       border-right: 1px solid #dee2e6;
       user-select: none;
+      transition: width 0.2s ease;
+
+      &.collapsed {
+        width: 44px;
+        min-width: 44px;
+      }
+    }
+
+    .collapsed-strip {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      width: 44px;
+      height: 100%;
+      padding: 6px 0;
+      box-sizing: border-box;
+      background: #f8f9fa;
+    }
+
+    .strip-spacer {
+      flex: 1;
+    }
+
+    .column-footer {
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      border-top: 1px solid #dee2e6;
+      background: #f8f9fa;
+      height: 40px;
+      box-sizing: border-box;
+    }
+
+    .collapse-toggle-btn {
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+      color: #6c757d;
+
+      &:hover {
+        color: #1971c2;
+        background: #e7f5ff;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
     }
 
     .nav-column {

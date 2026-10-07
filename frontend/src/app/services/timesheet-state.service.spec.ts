@@ -78,4 +78,12 @@ describe('TimesheetStateService', () => {
     expect(targetDay?.endTime).toBe('17:00');
     expect(targetDay?.pauseMinutes).toBe(30);
   });
+
+  it('should toggle navigation collapse state', () => {
+    expect(service.isNavCollapsed()).toBe(false);
+    service.toggleNavCollapsed();
+    expect(service.isNavCollapsed()).toBe(true);
+    service.toggleNavCollapsed();
+    expect(service.isNavCollapsed()).toBe(false);
+  });
 });
