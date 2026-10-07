@@ -123,23 +123,25 @@ import { TimesheetDay } from '../../models/timesheet.model';
                     placeholder="Tätigkeit eintragen...">
                 </td>
                 <td class="col-actions">
-                  <button
-                    mat-icon-button
-                    class="row-action-btn"
-                    (click)="duplicateFromPrevious(rowIndex)"
-                    [disabled]="rowIndex === 0"
-                    matTooltip="Vortag kopieren (Ctrl+D)"
-                    aria-label="Vortag kopieren">
-                    <mat-icon>content_copy</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    class="row-action-btn"
-                    (click)="clearRow(rowIndex)"
-                    matTooltip="Zeile leeren"
-                    aria-label="Zeile leeren">
-                    <mat-icon>clear</mat-icon>
-                  </button>
+                  <div class="action-buttons-cell">
+                    <button
+                      mat-icon-button
+                      class="row-action-btn"
+                      (click)="duplicateFromPrevious(rowIndex)"
+                      [disabled]="rowIndex === 0"
+                      matTooltip="Vortag kopieren (Ctrl+D)"
+                      aria-label="Vortag kopieren">
+                      <mat-icon>content_copy</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      class="row-action-btn"
+                      (click)="clearRow(rowIndex)"
+                      matTooltip="Zeile leeren"
+                      aria-label="Zeile leeren">
+                      <mat-icon>clear</mat-icon>
+                    </button>
+                  </div>
                 </td>
               </tr>
             }
@@ -303,7 +305,14 @@ import { TimesheetDay } from '../../models/timesheet.model';
     .col-pause { width: 90px; }
     .col-net { width: 95px; text-align: right; }
     .col-comment { width: auto; }
-    .col-actions { width: 70px; text-align: center; }
+    .col-actions { width: 76px; min-width: 76px; text-align: center; padding: 2px 4px !important; }
+
+    .action-buttons-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
 
     .date-day-cell {
       display: flex;
@@ -397,14 +406,42 @@ import { TimesheetDay } from '../../models/timesheet.model';
     }
 
     .row-action-btn {
-      width: 28px;
-      height: 28px;
-      line-height: 28px;
+      &.mat-mdc-icon-button {
+        --mdc-icon-button-state-layer-size: 26px;
+        --mdc-icon-button-icon-size: 16px;
+        width: 26px !important;
+        height: 26px !important;
+        min-width: 26px !important;
+        min-height: 26px !important;
+        padding: 0 !important;
+        line-height: 26px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      ::ng-deep .mat-mdc-button-touch-target,
+      .mat-mdc-button-touch-target {
+        display: none !important;
+      }
 
       mat-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
+        line-height: 16px;
+      }
+
+      &:disabled,
+      &[disabled] {
+        opacity: 0.25 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+        color: #ced4da !important;
+
+        mat-icon {
+          color: #ced4da !important;
+        }
       }
     }
   `]

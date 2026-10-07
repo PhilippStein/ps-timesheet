@@ -26,3 +26,41 @@ html, body {
   align-items: center;
   justify-content: center;
 }
+
+// Compact table action buttons (Material MDC override)
+.row-action-btn.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 26px !important;
+  --mdc-icon-button-icon-size: 16px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  padding: 0 !important;
+  line-height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  .mat-mdc-button-touch-target {
+    display: none !important;
+  }
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+  }
+
+  &:disabled,
+  &[disabled] {
+    opacity: 0.25 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    color: #ced4da !important;
+
+    mat-icon {
+      color: #ced4da !important;
+    }
+  }
+}
