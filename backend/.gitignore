@@ -1,0 +1,30 @@
+# Maven build output
+/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+
+# Compiled Angular frontend resources
+/src/main/resources/META-INF/resources/
+
+# Quarkus development and build cache
+/.quarkus/
+
+# IDE and Editor files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+*.ipr
+*.iws
+
+# System and OS files
+.DS_Store
+Thumbs.db
