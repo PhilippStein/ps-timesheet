@@ -1,0 +1,441 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { TimesheetStateService } from '../../services/timesheet-state.service';
+import { TimesheetDay } from '../../models/timesheet.model';
+
+@Component({
+  selector: 'app-work-hours-editor',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule
+  ],
+  template: `
+    <div class="editor-container" (keydown)="handleGlobalKeydown($event)">
+      <!-- HEADER METRICS BAR -->
+      <div class="metrics-bar">
+        <div class="metric-item">
+          <span class="metric-label">Monats-Gesamtzeit:</span>
+          <span class="metric-value font-mono">{{ formatHours(state.activeMonthData()?.totalNetHours) }} h</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Arbeitstage:</span>
+          <span class="metric-value font-mono">{{ countWorkedDays() }} / {{ state.activeMonthData()?.days?.length || 0 }}</span>
+        </div>
+        <div class="shortcut-hints">
+          <span class="hint-tag"><kbd>Ctrl+D</kbd> Vortag kopieren</span>
+          <span class="hint-tag"><kbd>Tab</kbd> Nächste Spalte</span>
+          <span class="hint-tag"><kbd>Enter</kbd> Nächster Tag</span>
+        </div>
+      </div>
+
+      <!-- TIMESHEET TABLE -->
+      <div class="table-scroll-wrapper">
+        <table class="timesheet-table">
+          <thead>
+            <tr>
+              <th class="col-date">Datum</th>
+              <th class="col-day">Tag</th>
+              <th class="col-time">Beginn</th>
+              <th class="col-time">Ende</th>
+              <th class="col-pause">Pause (min)</th>
+              <th class="col-net">Netto (h)</th>
+              <th class="col-comment">Kommentar / Tätigkeiten</th>
+              <th class="col-actions">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
+              <tr [class.weekend-row]="day.isWeekend" [class.has-hours]="day.netHours && day.netHours > 0">
+                <td class="col-date font-mono">{{ day.date }}</td>
+                <td class="col-day">
+                  <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                </td>
+                <td class="col-time">
+                  <input
+                    type="text"
+                    class="cell-input time-input font-mono"
+                    [id]="'input-' + rowIndex + '-start'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="1"
+                    [(ngModel)]="day.startTime"
+                    (blur)="onTimeBlur(day, 'start'); triggerUpdate()"
+                    (keydown)="handleCellKeydown($event, rowIndex, 1)"
+                    placeholder="08:30"
+                    maxlength="5">
+                </td>
+                <td class="col-time">
+                  <input
+                    type="text"
+                    class="cell-input time-input font-mono"
+                    [id]="'input-' + rowIndex + '-end'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="2"
+                    [(ngModel)]="day.endTime"
+                    (blur)="onTimeBlur(day, 'end'); triggerUpdate()"
+                    (keydown)="handleCellKeydown($event, rowIndex, 2)"
+                    placeholder="17:00"
+                    maxlength="5">
+                </td>
+                <td class="col-pause">
+                  <input
+                    type="number"
+                    class="cell-input pause-input font-mono"
+                    [id]="'input-' + rowIndex + '-pause'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="3"
+                    [(ngModel)]="day.pauseMinutes"
+                    (blur)="triggerUpdate()"
+                    (keydown)="handleCellKeydown($event, rowIndex, 3)"
+                    placeholder="30"
+                    min="0"
+                    step="5">
+                </td>
+                <td class="col-net font-mono">
+                  <span class="net-hours-badge" [class.positive]="day.netHours && day.netHours > 0">
+                    {{ day.netHours ? day.netHours.toFixed(2) + ' h' : '-' }}
+                  </span>
+                </td>
+                <td class="col-comment">
+                  <input
+                    type="text"
+                    class="cell-input comment-input"
+                    [id]="'input-' + rowIndex + '-comment'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="4"
+                    [(ngModel)]="day.comment"
+                    (blur)="triggerUpdate()"
+                    (keydown)="handleCellKeydown($event, rowIndex, 4)"
+                    placeholder="Tätigkeit eintragen...">
+                </td>
+                <td class="col-actions">
+                  <button
+                    mat-icon-button
+                    class="row-action-btn"
+                    (click)="duplicateFromPrevious(rowIndex)"
+                    [disabled]="rowIndex === 0"
+                    matTooltip="Vortag kopieren (Ctrl+D)"
+                    aria-label="Vortag kopieren">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    class="row-action-btn"
+                    (click)="clearRow(rowIndex)"
+                    matTooltip="Zeile leeren"
+                    aria-label="Zeile leeren">
+                    <mat-icon>clear</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="5" class="total-label">Monats-Gesamtstunden:</td>
+              <td class="col-net font-mono total-value">
+                {{ formatHours(state.activeMonthData()?.totalNetHours) }} h
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .editor-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #ffffff;
+      outline: none;
+    }
+
+    .metrics-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 12px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .metric-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0ca678;
+    }
+
+    .shortcut-hints {
+      margin-left: auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    .hint-tag {
+      font-size: 11px;
+      color: #868e96;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      kbd {
+        background: #e9ecef;
+        padding: 2px 5px;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        font-family: monospace;
+        color: #495057;
+      }
+    }
+
+    .table-scroll-wrapper {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .timesheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+
+      th {
+        position: sticky;
+        top: 0;
+        background: #f1f3f5;
+        padding: 8px 12px;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        z-index: 10;
+      }
+
+      td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      tr:hover {
+        background-color: #f8f9fa;
+      }
+
+      tr.weekend-row {
+        background-color: #fcfcfc;
+        color: #868e96;
+      }
+
+      tr.has-hours {
+        background-color: #f8fffb;
+      }
+    }
+
+    .col-date { width: 95px; }
+    .col-day { width: 85px; }
+    .col-time { width: 90px; }
+    .col-pause { width: 90px; }
+    .col-net { width: 95px; text-align: right; }
+    .col-comment { width: auto; }
+    .col-actions { width: 70px; text-align: center; }
+
+    .day-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      background: #e9ecef;
+      color: #495057;
+
+      &.weekend-badge {
+        background: #ffe3e3;
+        color: #c92a2a;
+      }
+    }
+
+    .cell-input {
+      width: 100%;
+      height: 30px;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      font-size: 13px;
+      box-sizing: border-box;
+      transition: border-color 0.15s, background-color 0.15s;
+
+      &:hover {
+        border-color: #ced4da;
+        background: #ffffff;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #339af0;
+        background: #ffffff;
+        box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+      }
+    }
+
+    .time-input, .pause-input {
+      text-align: center;
+    }
+
+    .net-hours-badge {
+      font-weight: 600;
+      color: #868e96;
+
+      &.positive {
+        color: #0ca678;
+      }
+    }
+
+    .totals-row {
+      background: #f8f9fa;
+      font-weight: 700;
+      border-top: 2px solid #dee2e6;
+
+      .total-label {
+        text-align: right;
+        padding-right: 12px;
+        color: #495057;
+      }
+
+      .total-value {
+        color: #0ca678;
+        font-size: 15px;
+      }
+    }
+
+    .row-action-btn {
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  `]
+})
+export class WorkHoursEditorComponent {
+  readonly state = inject(TimesheetStateService);
+
+  formatHours(hours: number | undefined): string {
+    return hours != null ? hours.toFixed(2) : '0.00';
+  }
+
+  countWorkedDays(): number {
+    const days = this.state.activeMonthData()?.days || [];
+    return days.filter(d => d.netHours != null && d.netHours > 0).length;
+  }
+
+  triggerUpdate() {
+    this.state.updateActiveMonthData(month => {
+      // triggers recalculation and debounced auto-save
+    });
+  }
+
+  onTimeBlur(day: TimesheetDay, field: 'start' | 'end') {
+    const val = field === 'start' ? day.startTime : day.endTime;
+    if (!val || val.trim().length === 0) return;
+
+    const formatted = this.smartFormatTime(val.trim());
+    if (field === 'start') {
+      day.startTime = formatted;
+    } else {
+      day.endTime = formatted;
+    }
+  }
+
+  smartFormatTime(val: string): string {
+    if (/^\d{1,2}:\d{2}$/.test(val)) {
+      const [h, m] = val.split(':');
+      return `${h.padStart(2, '0')}:${m}`;
+    }
+    if (/^\d{1,2}$/.test(val)) {
+      return `${val.padStart(2, '0')}:00`;
+    }
+    if (/^\d{3}$/.test(val)) {
+      return `0${val.charAt(0)}:${val.slice(1)}`;
+    }
+    if (/^\d{4}$/.test(val)) {
+      return `${val.slice(0, 2)}:${val.slice(2)}`;
+    }
+    if (/^\d+(\.\d+)?$/.test(val)) {
+      const num = parseFloat(val);
+      const h = Math.floor(num);
+      const m = Math.round((num - h) * 60);
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    }
+    return val;
+  }
+
+  duplicateFromPrevious(rowIndex: number) {
+    if (rowIndex > 0) {
+      this.state.duplicateDay(rowIndex - 1, rowIndex);
+    }
+  }
+
+  clearRow(rowIndex: number) {
+    this.state.updateActiveMonthData(month => {
+      const day = month.days[rowIndex];
+      day.startTime = null;
+      day.endTime = null;
+      day.pauseMinutes = null;
+      day.comment = null;
+      day.netHours = null;
+    });
+  }
+
+  handleGlobalKeydown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+      event.preventDefault();
+      const activeElement = document.activeElement as HTMLElement;
+      if (activeElement && activeElement.hasAttribute('data-row')) {
+        const row = parseInt(activeElement.getAttribute('data-row') || '0', 10);
+        this.duplicateFromPrevious(row);
+      }
+    }
+  }
+
+  handleCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      // Move down to the same column on the next row
+      const nextRow = rowIndex + 1;
+      const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  }
+}

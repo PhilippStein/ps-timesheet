@@ -15,8 +15,8 @@ Data storage is purely filesystem-based using human-readable CSV files and YAML/
   - Frontend in Angular 22 with Angular Material.
   - User configuration loaded from `~/.pstimesheet.yaml` in the user's home directory.
   - Hierarchical file-system storage: `<basePath>/<yyyy>/<yyyy>_<MM>_<projectName>_<templateName>.csv` (Semicolon `;` separated, dot `.` decimal separator).
-  - **Template 1**: Daily start time, end time, pause duration, daily comment, and computed net duration.
-  - **Template 2**: Daily person-days (PT) per task (dynamic task columns per month, project defaults) and daily bulletpoint lists/notes per day.
+  - **WorkHours Template**: Daily start time, end time, pause duration, daily comment, and computed net duration.
+  - **PersonDays Template**: Daily person-days (PT) per task (dynamic task columns per month, project defaults) and daily bulletpoint lists/notes per day.
   - OneNote-style multi-column layout: Projects column (`+ Projekt`), Years column (`+ Jahr`), Months column (`+ Monat`), and Main Timesheet Editor area.
   - Auto-navigation to current month on project selection, auto-creating directory structure and initialized CSV if not yet existing.
   - Auto-save on blur / debounced change in the frontend.
@@ -31,8 +31,8 @@ Data storage is purely filesystem-based using human-readable CSV files and YAML/
 ### User Stories
 - **US1**: As a user, I want to manage my time-tracking projects in a central YAML config file (`~/.pstimesheet.yaml`) with specific base storage paths and templates so that my project structure is clean and portable.
 - **US2**: As a user, I want a OneNote-like navigation pane with Projects, Years, and Months so that I can quickly switch between periods and projects.
-- **US3**: As a user, I want Template 1 to record exact start/end times and pause durations per day and view total working hours per day and month.
-- **US4**: As a user, I want Template 2 to track person-days (PT) per task per day, customize tasks per month, and record daily bulletpoint lists per day to document detailed accomplishments efficiently.
+- **US3**: As a user, I want the WorkHours template to record exact start/end times and pause durations per day and view total working hours per day and month.
+- **US4**: As a user, I want the PersonDays template to track person-days (PT) per task per day, customize tasks per month, and record daily bulletpoint lists per day to document detailed accomplishments efficiently.
 - **US5**: As a user, I want missing year folders and month CSVs to be created automatically when navigating so that I can start tracking immediately without manual file creation.
 - **US6**: As a user, I want to start the application easily on my local machine via standard Java / Maven tooling.
 
@@ -40,10 +40,10 @@ Data storage is purely filesystem-based using human-readable CSV files and YAML/
 - **FR1 (Config Management)**: On startup, read `~/.pstimesheet.yaml`. If not present, create a default template configuration. Provide API endpoints to read and update project configurations.
 - **FR2 (Directory & CSV Scanning)**: Scan configured project `basePath` directories for subdirectories matching 4-digit years (`<yyyy>`) and files matching `<yyyy>_<MM>_<projectName>_<templateName>.csv`.
 - **FR3 (Auto-Creation)**: Selecting a project navigates to current year/month. If the year folder or month CSV does not exist, initialize it with all calendar days of that month (1..lastDay) and header row.
-- **FR4 (Template 1 Processing)**:
+- **FR4 (WorkHours Template Processing)**:
   - Columns: `Date`, `DayOfWeek`, `StartTime` (`HH:mm`), `EndTime` (`HH:mm`), `PauseMinutes` (`int`), `Comment` (`text`).
   - Calculate daily net hours (`(EndTime - StartTime) - Pause`) and monthly totals dynamically on the fly (not persisted as a separate CSV column).
-- **FR5 (Template 2 Processing)**:
+- **FR5 (PersonDays Template Processing)**:
   - Dynamic task columns: `Date`, `DayOfWeek`, `<Task 1>`, `<Task 2>`, ..., `<Task N>`, `Notes`.
   - Monthly task defaults loaded from project config; month CSV columns define actual month tasks.
   - Calculate daily total PT (sum across task columns) and monthly totals dynamically on the fly (not persisted as a separate CSV column).
@@ -227,7 +227,7 @@ Automated testing in both backend and frontend layers combined with local end-to
 
 # Delivery Steps
 
-###   Step 1: Quarkus Backend Foundation, Configuration & File-System Storage Layer
+### ✓ Step 1: Quarkus Backend Foundation, Configuration & File-System Storage Layer
 The Quarkus backend starts up locally with configuration management, user-directory lookup, and path resolution for timesheet projects.
 
 - Initialize the Quarkus 3.40.0 application structure with Java 25, base package `de.phstein.timesheet`, and dependencies (`quarkus-rest-jackson`, `jackson-dataformat-yaml`, `opencsv` / `commons-csv`).
@@ -236,7 +236,7 @@ The Quarkus backend starts up locally with configuration management, user-direct
 - Provide CRUD REST endpoints in `ProjectResource` and `ConfigResource` (`GET /api/projects`, `POST /api/projects`, `PUT /api/projects/{name}`, `GET /api/config`).
 - Add unit tests for config parsing, default creation, and path expansions.
 
-###   Step 2: Timesheet Data Engine & REST API for Template 1 and Template 2
+### ✓ Step 2: Timesheet Data Engine & REST API for Template 1 and Template 2
 The backend scans existing year/month CSV files, auto-creates missing month CSVs on access, and supports reading/writing of Template 1 and Template 2 timesheet data.
 
 - Implement `TimesheetStorageService` to list existing years and month CSVs matching `<basePath>/<yyyy>/<yyyy>_<MM>_<projectName>_<templateName>.csv`.
@@ -246,7 +246,7 @@ The backend scans existing year/month CSV files, auto-creates missing month CSVs
 - Implement auto-creation logic: when accessing a project/year/month without an existing CSV, generate the folder structure and initialize the CSV pre-populated with all days of the month.
 - Add integration tests verifying CSV parsing, calculation, and file persistence.
 
-###   Step 3: Angular Frontend Architecture & OneNote-Style Navigation Layout
+### ✓ Step 3: Angular Frontend Architecture & OneNote-Style Navigation Layout
 The Angular frontend renders a 3-column OneNote-style navigation hierarchy (Projects, Years, Months) with action buttons and reactive selection state.
 
 - Set up Angular 22 with Angular Material, SCSS styling, and standalone components structure.
@@ -258,7 +258,7 @@ The Angular frontend renders a 3-column OneNote-style navigation hierarchy (Proj
 - Implement `ProjectDialogComponent` to add/edit projects, choose templates, set base paths, and configure default tasks.
 - Add component tests for navigation selection and dialog actions.
 
-###   Step 4: Timesheet Editors for Template 1, Template 2 & Dynamic Task Management
+### ✓ Step 4: Timesheet Editors for Template 1, Template 2 & Dynamic Task Management
 Users can view, edit, and save timesheet entries for both Template 1 and Template 2 with real-time validations, sums, and note management.
 
 - Implement `Template1EditorComponent` with an editable Material table for days 1..N:
@@ -272,7 +272,7 @@ Users can view, edit, and save timesheet entries for both Template 1 and Templat
 - Add debounced auto-save on blur/change with clear visual saving indicator.
 - Add unit tests for calculation logic and dynamic column manipulation.
 
-###   Step 5: Frontend & Backend Integration, Build & Packaging
+### ✓ Step 5: Frontend & Backend Integration, Build & Packaging
 The Angular frontend is built and served directly by Quarkus, supporting both seamless local development and production single-binary distribution.
 
 - Configure Maven build (e.g. `frontend-maven-plugin`) to build the Angular application and copy production assets into `backend/src/main/resources/META-INF/resources`.

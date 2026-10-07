@@ -29,12 +29,12 @@ See `proposal.md` for background and user requirements. The application operates
 - **Alternatives Considered**: Comma-separated RFC 4180 format or separate companion JSON/Markdown files.
 
 ### 3. Dynamic Calculation of NetHours and Total_PT
-- **Decision**: Calculate daily net hours (`Template 1`) and daily/monthly person-day sums (`Template 2`) dynamically in memory.
+- **Decision**: Calculate daily net hours (`WorkHours`) and daily/monthly person-day sums (`PersonDays`) dynamically in memory.
 - **Rationale**: Prevents data drift and synchronization inconsistencies by keeping raw input values authoritative.
 - **Alternatives Considered**: Persisting computed sums as redundant columns in the CSV.
 
 ### 4. Inline Expanding Textarea for Daily Notes
-- **Decision**: Use an inline expanding textarea with Angular CDK autosize for multiline bulletpoint notes.
+- **Decision**: Use an inline expanding textarea with Angular CDK autosize for multiline bulletpoint notes in `PersonDays`.
 - **Rationale**: Preserves direct visual locality between daily PT allocations and documented achievements without modal context-switching.
 - **Alternatives Considered**: Side-drawer editor or modal popups.
 

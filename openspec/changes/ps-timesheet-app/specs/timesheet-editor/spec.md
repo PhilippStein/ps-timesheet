@@ -17,7 +17,7 @@ The system SHALL render an editable table for all calendar days of the selected 
 - **THEN** changes are debounced and saved automatically to the backend without requiring manual save button clicks
 
 ### Requirement: Inline Expanding Notes Editor
-The system SHALL provide an inline expanding textarea for editing multiline bulletpoint notes per day row in Template 2.
+The system SHALL provide an inline expanding textarea for editing multiline bulletpoint notes per day row in the PersonDays template.
 
 #### Scenario: Dynamic expansion on focus
 - **WHEN** a user focuses or edits a day's note cell

@@ -5,19 +5,19 @@ Defines time-tracking templates for timestamp tracking and dynamic task person-d
 
 ## ADDED Requirements
 
-### Requirement: Template 1 - Timestamp Tracking
-The system SHALL support Template 1 recording Date, DayOfWeek, StartTime (HH:mm), EndTime (HH:mm), PauseMinutes, and Comment per day, calculating daily net hours dynamically without storing net hours as a persistent CSV column.
+### Requirement: WorkHours Template - Timestamp Tracking
+The system SHALL support the WorkHours template (`WorkHours`) recording Date, DayOfWeek, StartTime (HH:mm), EndTime (HH:mm), PauseMinutes, and Comment per day, calculating daily net hours dynamically without storing net hours as a persistent CSV column.
 
 #### Scenario: Dynamic net hours calculation
 - **WHEN** StartTime is 08:30, EndTime is 17:00, and PauseMinutes is 30
 - **THEN** daily net hours is dynamically calculated as 8.0 hours and included in monthly totals
 
-#### Scenario: Template 1 CSV persistence
-- **WHEN** saving Template 1 timesheet data
+#### Scenario: WorkHours CSV persistence
+- **WHEN** saving WorkHours timesheet data
 - **THEN** the CSV file is saved with columns `Date;DayOfWeek;StartTime;EndTime;PauseMinutes;Comment` using semicolon delimiter
 
-### Requirement: Template 2 - Dynamic Task Person-Days and Daily Notes
-The system SHALL support Template 2 recording Date, DayOfWeek, dynamic monthly task person-days (PT), and daily multiline bulletpoint notes in a dedicated `Notes` column, calculating daily and monthly total PT dynamically without storing total PT as a persistent CSV column.
+### Requirement: PersonDays Template - Dynamic Task Person-Days and Daily Notes
+The system SHALL support the PersonDays template (`PersonDays`) recording Date, DayOfWeek, dynamic monthly task person-days (PT), and daily multiline bulletpoint notes in a dedicated `Notes` column, calculating daily and monthly total PT dynamically without storing total PT as a persistent CSV column.
 
 #### Scenario: Dynamic task columns per month
 - **WHEN** a user modifies task column headers for a specific month

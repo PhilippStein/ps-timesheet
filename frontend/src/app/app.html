@@ -1,0 +1,84 @@
+<div class="app-layout">
+  <!-- TOP APP BAR -->
+  <mat-toolbar color="primary" class="app-header">
+    <div class="brand">
+      <mat-icon class="brand-icon">access_time</mat-icon>
+      <span class="app-title">PS-Timesheet</span>
+    </div>
+
+    @if (state.selectedProject()) {
+      <div class="header-active-info">
+        <span class="info-project">{{ state.selectedProject()?.name }}</span>
+        <mat-icon class="crumb-separator">chevron_right</mat-icon>
+        <span class="info-period font-mono">{{ state.selectedYear() }} / {{ state.selectedMonth() ? (state.selectedMonth()! < 10 ? '0' + state.selectedMonth() : state.selectedMonth()) : '' }} - {{ getMonthName(state.selectedMonth()) }}</span>
+        <span class="info-template-badge" [class.badge-hours]="state.isWorkHoursTemplate()" [class.badge-days]="state.isPersonDaysTemplate()">
+          {{ state.selectedProject()?.template }}
+        </span>
+      </div>
+    }
+
+    <div class="header-spacer"></div>
+
+    <!-- AUTO-SAVE STATUS INDICATOR -->
+    <div class="save-status-indicator">
+      @if (state.saveStatus() === 'saving') {
+        <span class="status-badge status-saving">
+          <mat-icon class="spin-icon">sync</mat-icon> Speichert...
+        </span>
+      } @else if (state.saveStatus() === 'saved') {
+        <span class="status-badge status-saved">
+          <mat-icon>check</mat-icon> Gespeichert
+        </span>
+      } @else if (state.saveStatus() === 'error') {
+        <span class="status-badge status-error">
+          <mat-icon>error_outline</mat-icon> Fehler beim Speichern
+        </span>
+      } @else {
+        <span class="status-badge status-idle">
+          <mat-icon>cloud_done</mat-icon> Bereit
+        </span>
+      }
+    </div>
+
+    <button mat-icon-button (click)="forceSave()" matTooltip="Jetzt speichern (Ctrl+S)" aria-label="Speichern">
+      <mat-icon>save</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <!-- LOADING PROGRESS BAR -->
+  @if (state.isLoading()) {
+    <mat-progress-bar mode="indeterminate" class="loading-bar"></mat-progress-bar>
+  }
+
+  <!-- MAIN WORKSPACE -->
+  <main class="main-workspace">
+    <!-- ONENOTE 3-COLUMN NAVIGATION -->
+    <aside class="nav-pane">
+      <app-timesheet-navigation></app-timesheet-navigation>
+    </aside>
+
+    <!-- ACTIVE TIMESHEET EDITOR AREA -->
+    <section class="editor-pane">
+      @if (state.errorMessage()) {
+        <div class="error-banner">
+          <mat-icon>warning</mat-icon>
+          <span>{{ state.errorMessage() }}</span>
+        </div>
+      }
+
+      @if (state.activeMonthData()) {
+        @if (state.isWorkHoursTemplate()) {
+          <app-work-hours-editor></app-work-hours-editor>
+        } @else if (state.isPersonDaysTemplate()) {
+          <app-person-days-editor></app-person-days-editor>
+        }
+      } @else if (!state.isLoading()) {
+        <div class="empty-state-card">
+          <mat-icon class="empty-icon">schedule</mat-icon>
+          <h2>Kein Zeiterfassungsmonat ausgewählt</h2>
+          <p>Wähle links ein Projekt, Jahr und Monat aus oder erstelle ein neues Projekt.</p>
+        </div>
+      }
+    </section>
+  </main>
+</div>
