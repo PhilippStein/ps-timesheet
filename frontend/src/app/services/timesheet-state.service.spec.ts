@@ -4,10 +4,16 @@ import { TimesheetStateService } from './timesheet-state.service';
 import { TimesheetApiService } from './timesheet-api.service';
 import { ProjectConfig, ProjectTreeDTO } from '../models/project.model';
 import { TimesheetMonth } from '../models/timesheet.model';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('TimesheetStateService', () => {
   let service: TimesheetStateService;
-  let apiSpy: jasmine.SpyObj<TimesheetApiService>;
+  let apiSpy: {
+    getProjects: ReturnType<typeof vi.fn>;
+    getProjectTree: ReturnType<typeof vi.fn>;
+    getMonth: ReturnType<typeof vi.fn>;
+    saveMonth: ReturnType<typeof vi.fn>;
+  };
 
   const mockProjects: ProjectConfig[] = [
     { name: 'ProjHours', basePath: '/tmp/hours', template: 'WorkHours' },
@@ -41,10 +47,12 @@ describe('TimesheetStateService', () => {
   };
 
   beforeEach(() => {
-    apiSpy = jasmine.createSpyObj('TimesheetApiService', ['getProjects', 'getProjectTree', 'getMonth', 'saveMonth']);
-    apiSpy.getProjects.and.returnValue(of(mockProjects));
-    apiSpy.getProjectTree.and.returnValue(of(mockTree));
-    apiSpy.getMonth.and.returnValue(of(mockMonthData));
+    apiSpy = {
+      getProjects: vi.fn().mockReturnValue(of(mockProjects)),
+      getProjectTree: vi.fn().mockReturnValue(of(mockTree)),
+      getMonth: vi.fn().mockReturnValue(of(mockMonthData)),
+      saveMonth: vi.fn().mockReturnValue(of(mockMonthData))
+    };
 
     TestBed.configureTestingModule({
       providers: [

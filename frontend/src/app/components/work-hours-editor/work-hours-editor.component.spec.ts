@@ -4,6 +4,7 @@ import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('WorkHoursEditorComponent', () => {
   let component: WorkHoursEditorComponent;
@@ -11,19 +12,21 @@ describe('WorkHoursEditorComponent', () => {
   let stateService: TimesheetStateService;
 
   beforeEach(async () => {
-    const apiSpy = jasmine.createSpyObj('TimesheetApiService', ['getProjects', 'getProjectTree', 'getMonth', 'saveMonth']);
-    apiSpy.getProjects.and.returnValue(of([{ name: 'Test', basePath: '/tmp/test', template: 'WorkHours' }]));
-    apiSpy.getProjectTree.and.returnValue(of({ projectName: 'Test', basePath: '/tmp/test', template: 'WorkHours', years: [] }));
-    apiSpy.getMonth.and.returnValue(of({
-      projectName: 'Test',
-      year: 2026,
-      month: 10,
-      template: 'WorkHours',
-      taskColumns: [],
-      days: [
-        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, startTime: '08:00', endTime: '16:30', pauseMinutes: 30 }
-      ]
-    }));
+    const apiSpy = {
+      getProjects: vi.fn().mockReturnValue(of([{ name: 'Test', basePath: '/tmp/test', template: 'WorkHours' }])),
+      getProjectTree: vi.fn().mockReturnValue(of({ projectName: 'Test', basePath: '/tmp/test', template: 'WorkHours', years: [] })),
+      getMonth: vi.fn().mockReturnValue(of({
+        projectName: 'Test',
+        year: 2026,
+        month: 10,
+        template: 'WorkHours',
+        taskColumns: [],
+        days: [
+          { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, startTime: '08:00', endTime: '16:30', pauseMinutes: 30 }
+        ]
+      })),
+      saveMonth: vi.fn().mockReturnValue(of(null))
+    };
 
     await TestBed.configureTestingModule({
       imports: [WorkHoursEditorComponent],

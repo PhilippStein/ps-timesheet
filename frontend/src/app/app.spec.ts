@@ -4,11 +4,16 @@ import { TimesheetApiService } from './services/timesheet-api.service';
 import { TimesheetStateService } from './services/timesheet-state.service';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('App', () => {
   beforeEach(async () => {
-    const apiSpy = jasmine.createSpyObj('TimesheetApiService', ['getProjects', 'getProjectTree', 'getMonth', 'saveMonth']);
-    apiSpy.getProjects.and.returnValue(of([]));
+    const apiSpy = {
+      getProjects: vi.fn().mockReturnValue(of([])),
+      getProjectTree: vi.fn().mockReturnValue(of({ projectName: '', basePath: '', template: '', years: [] })),
+      getMonth: vi.fn().mockReturnValue(of(null)),
+      saveMonth: vi.fn().mockReturnValue(of(null))
+    };
 
     await TestBed.configureTestingModule({
       imports: [App],

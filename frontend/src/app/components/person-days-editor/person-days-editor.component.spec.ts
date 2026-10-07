@@ -4,6 +4,7 @@ import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('PersonDaysEditorComponent', () => {
   let component: PersonDaysEditorComponent;
@@ -11,19 +12,21 @@ describe('PersonDaysEditorComponent', () => {
   let stateService: TimesheetStateService;
 
   beforeEach(async () => {
-    const apiSpy = jasmine.createSpyObj('TimesheetApiService', ['getProjects', 'getProjectTree', 'getMonth', 'saveMonth']);
-    apiSpy.getProjects.and.returnValue(of([{ name: 'Alpha', basePath: '/tmp/alpha', template: 'PersonDays', defaultTasks: ['Dev', 'QA'] }]));
-    apiSpy.getProjectTree.and.returnValue(of({ projectName: 'Alpha', basePath: '/tmp/alpha', template: 'PersonDays', years: [] }));
-    apiSpy.getMonth.and.returnValue(of({
-      projectName: 'Alpha',
-      year: 2026,
-      month: 10,
-      template: 'PersonDays',
-      taskColumns: ['Dev', 'QA'],
-      days: [
-        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, taskAllocations: { 'Dev': 0.5, 'QA': 0.5 }, notes: '- Task 1' }
-      ]
-    }));
+    const apiSpy = {
+      getProjects: vi.fn().mockReturnValue(of([{ name: 'Alpha', basePath: '/tmp/alpha', template: 'PersonDays', defaultTasks: ['Dev', 'QA'] }])),
+      getProjectTree: vi.fn().mockReturnValue(of({ projectName: 'Alpha', basePath: '/tmp/alpha', template: 'PersonDays', years: [] })),
+      getMonth: vi.fn().mockReturnValue(of({
+        projectName: 'Alpha',
+        year: 2026,
+        month: 10,
+        template: 'PersonDays',
+        taskColumns: ['Dev', 'QA'],
+        days: [
+          { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, taskAllocations: { 'Dev': 0.5, 'QA': 0.5 }, notes: '- Task 1' }
+        ]
+      })),
+      saveMonth: vi.fn().mockReturnValue(of(null))
+    };
 
     await TestBed.configureTestingModule({
       imports: [PersonDaysEditorComponent],

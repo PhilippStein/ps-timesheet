@@ -2,14 +2,15 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ProjectDialogComponent } from './project-dialog.component';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('ProjectDialogComponent', () => {
   let component: ProjectDialogComponent;
   let fixture: ComponentFixture<ProjectDialogComponent>;
-  let dialogRefSpy: jasmine.SpyObj<MatDialogRef<ProjectDialogComponent>>;
+  let dialogRefSpy: { close: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
+    dialogRefSpy = { close: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ProjectDialogComponent],
@@ -31,7 +32,7 @@ describe('ProjectDialogComponent', () => {
     component.template = 'PersonDays';
     component.defaultTasks = ['Task 1', 'Task 2'];
 
-    expect(component.isValid()).toBeTrue();
+    expect(component.isValid()).toBe(true);
 
     component.save();
 
