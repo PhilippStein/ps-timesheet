@@ -62,7 +62,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                   <span class="task-header-text">{{ task }}</span>
                 </th>
               }
-              <th class="col-pt font-mono">Total PT</th>
               <th class="col-notes">Tages-Notizen / Bulletpoints</th>
               <th class="col-actions">Aktionen</th>
             </tr>
@@ -96,13 +95,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                       placeholder="0.0">
                   </td>
                 }
-
-                <!-- TOTAL PT PER DAY -->
-                <td class="col-pt font-mono">
-                  <span class="pt-badge" [class.positive]="day.totalPt && day.totalPt > 0">
-                    {{ day.totalPt ? day.totalPt.toFixed(2) + ' PT' : '-' }}
-                  </span>
-                </td>
 
                 <!-- INLINE EXPANDING DAILY NOTES -->
                 <td class="col-notes">
@@ -150,9 +142,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                   {{ formatPt(state.activeMonthData()?.taskTotals?.[task]) }}
                 </td>
               }
-              <td class="col-pt font-mono total-value">
-                {{ formatPt(state.activeMonthData()?.totalPt) }} PT
-              </td>
               <td colspan="2"></td>
             </tr>
           </tfoot>
@@ -289,14 +278,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
         .date-text {
           color: #868e96;
         }
-
-        .pt-badge {
-          color: #adb5bd;
-
-          &.positive {
-            color: #d9480f;
-          }
-        }
       }
 
       tr.has-hours {
@@ -315,7 +296,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       max-width: 140px;
       text-align: center;
     }
-    .col-pt { width: 95px; text-align: right; }
     .col-notes { width: auto; min-width: 250px; }
     .col-actions { width: 70px; text-align: center; }
 
@@ -379,15 +359,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       text-align: center;
     }
 
-    .pt-badge {
-      font-weight: 600;
-      color: #868e96;
-
-      &.positive {
-        color: #d9480f;
-      }
-    }
-
     .notes-textarea {
       width: 100%;
       min-height: 28px;
@@ -435,11 +406,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
         text-align: center;
         color: #495057;
         font-size: 13px;
-      }
-
-      .total-value {
-        color: #d9480f;
-        font-size: 15px;
       }
     }
 
