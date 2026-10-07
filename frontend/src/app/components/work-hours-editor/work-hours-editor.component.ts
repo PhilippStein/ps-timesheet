@@ -58,10 +58,10 @@ import { TimesheetDay } from '../../models/timesheet.model';
           </thead>
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
-              <tr [class.weekend-row]="day.isWeekend" [class.has-hours]="day.netHours && day.netHours > 0">
+              <tr [class.weekend-row]="day.isWeekend || day.weekend" [class.has-hours]="day.netHours && day.netHours > 0">
                 <td class="col-date">
                   <div class="date-day-cell">
-                    <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                    <span class="day-badge" [class.weekend-badge]="day.isWeekend || day.weekend">{{ day.dayOfWeek }}</span>
                     <span class="date-text font-mono">{{ day.date }}</span>
                   </div>
                 </td>
@@ -248,12 +248,32 @@ import { TimesheetDay } from '../../models/timesheet.model';
       }
 
       tr.weekend-row {
-        background-color: #fcfcfc;
+        background-color: #f1f3f5;
         color: #868e96;
+
+        &:hover {
+          background-color: #e9ecef;
+        }
+
+        .date-text {
+          color: #868e96;
+        }
+
+        .net-hours-badge {
+          color: #adb5bd;
+
+          &.positive {
+            color: #0ca678;
+          }
+        }
       }
 
       tr.has-hours {
         background-color: #f8fffb;
+      }
+
+      tr.weekend-row.has-hours {
+        background-color: #e6fcf5;
       }
     }
 
@@ -291,6 +311,8 @@ import { TimesheetDay } from '../../models/timesheet.model';
       &.weekend-badge {
         background: #ffe3e3;
         color: #c92a2a;
+        border: 1px solid #ffa8a8;
+        font-weight: 700;
       }
     }
 

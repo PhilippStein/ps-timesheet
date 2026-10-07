@@ -2,6 +2,7 @@ export interface TimesheetDay {
   date: string;
   dayOfWeek: string;
   isWeekend: boolean;
+  weekend?: boolean;
   startTime?: string | null;
   endTime?: string | null;
   pauseMinutes?: number | null;

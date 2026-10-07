@@ -69,10 +69,10 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           </thead>
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
-              <tr [class.weekend-row]="day.isWeekend" [class.has-hours]="day.totalPt && day.totalPt > 0">
+              <tr [class.weekend-row]="day.isWeekend || day.weekend" [class.has-hours]="day.totalPt && day.totalPt > 0">
                 <td class="col-date">
                   <div class="date-day-cell">
-                    <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                    <span class="day-badge" [class.weekend-badge]="day.isWeekend || day.weekend">{{ day.dayOfWeek }}</span>
                     <span class="date-text font-mono">{{ day.date }}</span>
                   </div>
                 </td>
@@ -258,12 +258,32 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       }
 
       tr.weekend-row {
-        background-color: #fcfcfc;
+        background-color: #f1f3f5;
         color: #868e96;
+
+        &:hover {
+          background-color: #e9ecef;
+        }
+
+        .date-text {
+          color: #868e96;
+        }
+
+        .pt-badge {
+          color: #adb5bd;
+
+          &.positive {
+            color: #d9480f;
+          }
+        }
       }
 
       tr.has-hours {
         background-color: #fffaf6;
+      }
+
+      tr.weekend-row.has-hours {
+        background-color: #fff4e6;
       }
     }
 
@@ -305,6 +325,8 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       &.weekend-badge {
         background: #ffe3e3;
         color: #c92a2a;
+        border: 1px solid #ffa8a8;
+        font-weight: 700;
       }
     }
 

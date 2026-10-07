@@ -57,6 +57,9 @@ class TimesheetResourceTest {
                 .body("projectName", equalTo("ResourceTestHours"))
                 .body("template", equalTo("WorkHours"))
                 .body("days.size()", equalTo(31))
+                .body("days[0].isWeekend", equalTo(false)) // 2026-10-01 (Do)
+                .body("days[2].isWeekend", equalTo(true))  // 2026-10-03 (Sa)
+                .body("days[3].isWeekend", equalTo(true))  // 2026-10-04 (So)
                 .extract().as(TimesheetMonthDTO.class);
 
         // Edit day 1

@@ -1,7 +1,9 @@
 package de.phstein.timesheet.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +14,9 @@ public class TimesheetDayDTO {
 
     private String date; // "yyyy-MM-dd"
     private String dayOfWeek; // "Montag", "Dienstag", etc.
+
+    @JsonProperty("isWeekend")
+    @JsonAlias({"weekend", "isWeekend"})
     private boolean isWeekend;
 
     // WorkHours fields
@@ -51,10 +56,12 @@ public class TimesheetDayDTO {
         this.dayOfWeek = dayOfWeek;
     }
 
+    @JsonProperty("isWeekend")
     public boolean isWeekend() {
         return isWeekend;
     }
 
+    @JsonProperty("isWeekend")
     public void setWeekend(boolean weekend) {
         isWeekend = weekend;
     }
