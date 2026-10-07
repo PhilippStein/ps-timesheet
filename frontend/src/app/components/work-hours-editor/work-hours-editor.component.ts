@@ -158,15 +158,28 @@ import { TimesheetDay } from '../../models/timesheet.model';
     </div>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
     .editor-container {
       display: flex;
       flex-direction: column;
+      flex: 1;
+      min-height: 0;
       height: 100%;
       background: #ffffff;
       outline: none;
+      overflow: hidden;
     }
 
     .metrics-bar {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
       gap: 24px;
@@ -218,7 +231,9 @@ import { TimesheetDay } from '../../models/timesheet.model';
 
     .table-scroll-wrapper {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
+      overflow-x: auto;
     }
 
     .timesheet-table {
@@ -235,6 +250,12 @@ import { TimesheetDay } from '../../models/timesheet.model';
         font-weight: 600;
         color: #495057;
         border-bottom: 2px solid #dee2e6;
+        z-index: 10;
+      }
+
+      tfoot {
+        position: sticky;
+        bottom: 0;
         z-index: 10;
       }
 
@@ -354,9 +375,14 @@ import { TimesheetDay } from '../../models/timesheet.model';
     }
 
     .totals-row {
-      background: #f8f9fa;
+      background: #f1f3f5;
       font-weight: 700;
       border-top: 2px solid #dee2e6;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+
+      td {
+        background: #f1f3f5;
+      }
 
       .total-label {
         text-align: right;
