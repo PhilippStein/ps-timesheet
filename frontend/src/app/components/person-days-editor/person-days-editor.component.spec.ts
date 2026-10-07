@@ -51,4 +51,23 @@ describe('PersonDaysEditorComponent', () => {
       expect(component.getTaskPt(day, 'Dev')).toBe(0.8);
     }
   });
+
+  it('should calculate logged workdays excluding weekends', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, totalPt: 1.0, notes: null },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, totalPt: 0, notes: '' },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, totalPt: 1.0, notes: 'Weekend work' },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, totalPt: 0, notes: null }
+      ]
+    });
+
+    expect(component.countTotalWorkDays()).toBe(2);
+    expect(component.countLoggedDays()).toBe(1);
+  });
 });

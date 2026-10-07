@@ -49,4 +49,23 @@ describe('WorkHoursEditorComponent', () => {
     expect(component.smartFormatTime('1700')).toBe('17:00');
     expect(component.smartFormatTime('8.5')).toBe('08:30');
   });
+
+  it('should calculate worked workdays excluding weekends', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, netHours: 0 },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 5 },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0 }
+      ]
+    });
+
+    expect(component.countTotalWorkDays()).toBe(2);
+    expect(component.countWorkedDays()).toBe(1);
+  });
 });

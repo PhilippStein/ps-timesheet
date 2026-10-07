@@ -32,8 +32,8 @@ import { TimesheetDay } from '../../models/timesheet.model';
           <span class="metric-value font-mono">{{ formatHours(state.activeMonthData()?.totalNetHours) }} h</span>
         </div>
         <div class="metric-item">
-          <span class="metric-label">Arbeitstage:</span>
-          <span class="metric-value font-mono">{{ countWorkedDays() }} / {{ state.activeMonthData()?.days?.length || 0 }}</span>
+          <span class="metric-label">Erfasste Arbeitstage:</span>
+          <span class="metric-value font-mono">{{ countWorkedDays() }} / {{ countTotalWorkDays() }}</span>
         </div>
         <div class="shortcut-hints">
           <span class="hint-tag"><kbd>Ctrl+D</kbd> Vortag kopieren</span>
@@ -390,9 +390,18 @@ export class WorkHoursEditorComponent {
     return hours != null ? hours.toFixed(2) : '0.00';
   }
 
+  isWeekend(day: TimesheetDay): boolean {
+    return !!(day.isWeekend || day.weekend || day.dayOfWeek === 'Samstag' || day.dayOfWeek === 'Sonntag' || day.dayOfWeek === 'Saturday' || day.dayOfWeek === 'Sunday');
+  }
+
   countWorkedDays(): number {
     const days = this.state.activeMonthData()?.days || [];
-    return days.filter(d => d.netHours != null && d.netHours > 0).length;
+    return days.filter(d => !this.isWeekend(d) && d.netHours != null && d.netHours > 0).length;
+  }
+
+  countTotalWorkDays(): number {
+    const days = this.state.activeMonthData()?.days || [];
+    return days.filter(d => !this.isWeekend(d)).length;
   }
 
   triggerUpdate() {

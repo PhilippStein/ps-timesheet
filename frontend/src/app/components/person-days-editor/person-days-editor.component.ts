@@ -37,8 +37,8 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           <span class="metric-value font-mono">{{ formatPt(state.activeMonthData()?.totalPt) }} PT</span>
         </div>
         <div class="metric-item">
-          <span class="metric-label">Erfasste Tage:</span>
-          <span class="metric-value font-mono">{{ countLoggedDays() }} / {{ state.activeMonthData()?.days?.length || 0 }}</span>
+          <span class="metric-label">Erfasste Arbeitstage:</span>
+          <span class="metric-value font-mono">{{ countLoggedDays() }} / {{ countTotalWorkDays() }}</span>
         </div>
 
         <button mat-stroked-button color="primary" class="edit-tasks-btn" (click)="openEditTasksDialog()">
@@ -438,9 +438,18 @@ export class PersonDaysEditorComponent {
     return pt != null ? pt.toFixed(2) : '0.00';
   }
 
+  isWeekend(day: TimesheetDay): boolean {
+    return !!(day.isWeekend || day.weekend || day.dayOfWeek === 'Samstag' || day.dayOfWeek === 'Sonntag' || day.dayOfWeek === 'Saturday' || day.dayOfWeek === 'Sunday');
+  }
+
   countLoggedDays(): number {
     const days = this.state.activeMonthData()?.days || [];
-    return days.filter(d => (d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0)).length;
+    return days.filter(d => !this.isWeekend(d) && ((d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0))).length;
+  }
+
+  countTotalWorkDays(): number {
+    const days = this.state.activeMonthData()?.days || [];
+    return days.filter(d => !this.isWeekend(d)).length;
   }
 
   getTaskPt(day: TimesheetDay, task: string): number | null {
