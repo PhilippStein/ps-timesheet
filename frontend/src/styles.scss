@@ -1,5 +1,18 @@
 @use '@angular/material' as mat;
 
+@include mat.core();
+
+$theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+  ),
+));
+
+html {
+  @include mat.all-component-themes($theme);
+}
+
 html, body {
   height: 100%;
   margin: 0;
@@ -25,6 +38,25 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+// Material Tooltip styling (guarantee solid non-transparent background and clear text)
+.mat-mdc-tooltip {
+  --mdc-plain-tooltip-container-color: #212529 !important;
+  --mdc-plain-tooltip-supporting-text-color: #ffffff !important;
+
+  .mdc-tooltip__surface {
+    background-color: #212529 !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+    line-height: 1.3 !important;
+    max-width: 250px !important;
+    text-align: center !important;
+    opacity: 1 !important;
+  }
 }
 
 // Compact table action buttons (Material MDC override)

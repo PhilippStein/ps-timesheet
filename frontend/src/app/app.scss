@@ -15,6 +15,22 @@
   gap: 16px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   z-index: 20;
+
+  .header-save-btn,
+  .mat-mdc-icon-button {
+    color: #ffffff !important;
+    --mat-icon-button-icon-color: #ffffff !important;
+    --mat-icon-button-state-layer-color: #ffffff !important;
+    --mat-icon-button-ripple-color: rgba(255, 255, 255, 0.15) !important;
+
+    mat-icon {
+      color: #ffffff !important;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+    }
+  }
 }
 
 .brand {
