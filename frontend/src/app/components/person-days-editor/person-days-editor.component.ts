@@ -57,7 +57,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           <thead>
             <tr>
               <th class="col-date">Datum</th>
-              <th class="col-day">Tag</th>
               @for (task of state.activeMonthData()?.taskColumns; track task; let taskIndex = $index) {
                 <th class="col-task font-mono" [matTooltip]="task">
                   <span class="task-header-text">{{ task }}</span>
@@ -71,9 +70,11 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
               <tr [class.weekend-row]="day.isWeekend" [class.has-hours]="day.totalPt && day.totalPt > 0">
-                <td class="col-date font-mono">{{ day.date }}</td>
-                <td class="col-day">
-                  <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                <td class="col-date">
+                  <div class="date-day-cell">
+                    <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                    <span class="date-text font-mono">{{ day.date }}</span>
+                  </div>
                 </td>
 
                 <!-- DYNAMIC TASK COLUMNS -->
@@ -143,7 +144,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           </tbody>
           <tfoot>
             <tr class="totals-row">
-              <td colspan="2" class="total-label">Summen:</td>
+              <td class="total-label">Summen:</td>
               @for (task of state.activeMonthData()?.taskColumns; track task) {
                 <td class="col-task font-mono task-total-cell">
                   {{ formatPt(state.activeMonthData()?.taskTotals?.[task]) }}
@@ -266,8 +267,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       }
     }
 
-    .col-date { width: 95px; }
-    .col-day { width: 85px; }
+    .col-date { width: 110px; }
     .col-task {
       width: 100px;
       min-width: 90px;
@@ -278,20 +278,27 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
     .col-notes { width: auto; min-width: 250px; }
     .col-actions { width: 70px; text-align: center; }
 
-    .task-header-text {
-      display: inline-block;
-      max-width: 120px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .date-day-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 2px 0;
+    }
+
+    .date-text {
+      font-size: 12px;
+      color: #495057;
+      line-height: 1.2;
     }
 
     .day-badge {
       display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.3;
       background: #e9ecef;
       color: #495057;
 

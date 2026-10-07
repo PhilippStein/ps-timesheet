@@ -48,7 +48,6 @@ import { TimesheetDay } from '../../models/timesheet.model';
           <thead>
             <tr>
               <th class="col-date">Datum</th>
-              <th class="col-day">Tag</th>
               <th class="col-time">Beginn</th>
               <th class="col-time">Ende</th>
               <th class="col-pause">Pause (min)</th>
@@ -60,9 +59,11 @@ import { TimesheetDay } from '../../models/timesheet.model';
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
               <tr [class.weekend-row]="day.isWeekend" [class.has-hours]="day.netHours && day.netHours > 0">
-                <td class="col-date font-mono">{{ day.date }}</td>
-                <td class="col-day">
-                  <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                <td class="col-date">
+                  <div class="date-day-cell">
+                    <span class="day-badge" [class.weekend-badge]="day.isWeekend">{{ day.dayOfWeek }}</span>
+                    <span class="date-text font-mono">{{ day.date }}</span>
+                  </div>
                 </td>
                 <td class="col-time">
                   <input
@@ -145,7 +146,7 @@ import { TimesheetDay } from '../../models/timesheet.model';
           </tbody>
           <tfoot>
             <tr class="totals-row">
-              <td colspan="5" class="total-label">Monats-Gesamtstunden:</td>
+              <td colspan="4" class="total-label">Monats-Gesamtstunden:</td>
               <td class="col-net font-mono total-value">
                 {{ formatHours(state.activeMonthData()?.totalNetHours) }} h
               </td>
@@ -256,20 +257,34 @@ import { TimesheetDay } from '../../models/timesheet.model';
       }
     }
 
-    .col-date { width: 95px; }
-    .col-day { width: 85px; }
+    .col-date { width: 110px; }
     .col-time { width: 90px; }
     .col-pause { width: 90px; }
     .col-net { width: 95px; text-align: right; }
     .col-comment { width: auto; }
     .col-actions { width: 70px; text-align: center; }
 
+    .date-day-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 2px 0;
+    }
+
+    .date-text {
+      font-size: 12px;
+      color: #495057;
+      line-height: 1.2;
+    }
+
     .day-badge {
       display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1.3;
       background: #e9ecef;
       color: #495057;
 
