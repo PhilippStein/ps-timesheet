@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, Directive, ElementRef, HostListener, Input, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -8,10 +8,49 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TextFieldModule } from '@angular/cdk/text-field';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetDay } from '../../models/timesheet.model';
 import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-dialog.component';
+
+@Directive({
+  selector: 'textarea[appAutoresize]',
+  standalone: true
+})
+export class AutoresizeDirective implements AfterViewInit {
+  private readonly el = inject(ElementRef<HTMLTextAreaElement>);
+
+  @Input('appAutoresize') set value(val: any) {
+    this.scheduleResize();
+  }
+
+  @HostListener('input')
+  onInput() {
+    this.resize();
+  }
+
+  ngAfterViewInit() {
+    this.scheduleResize();
+  }
+
+  private scheduleResize() {
+    requestAnimationFrame(() => this.resize());
+    setTimeout(() => this.resize(), 0);
+  }
+
+  resize() {
+    const textarea = this.el?.nativeElement;
+    if (!textarea) return;
+
+    textarea.style.height = '0px';
+
+    const computed = window.getComputedStyle(textarea);
+    const borderBottom = parseFloat(computed.borderBottomWidth) || 0;
+    const borderTop = parseFloat(computed.borderTopWidth) || 0;
+
+    const targetHeight = Math.ceil(textarea.scrollHeight + borderTop + borderBottom);
+    textarea.style.height = `${Math.max(30, targetHeight)}px`;
+  }
+}
 
 @Component({
   selector: 'app-person-days-editor',
@@ -26,7 +65,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
     MatIconModule,
     MatTooltipModule,
     MatDialogModule,
-    TextFieldModule
+    AutoresizeDirective
   ],
   template: `
     <div class="editor-container" (keydown)="handleGlobalKeydown($event)">
@@ -99,10 +138,8 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                 <!-- INLINE EXPANDING DAILY NOTES -->
                 <td class="col-notes">
                   <textarea
-                    cdkTextareaAutosize
-                    #autosize="cdkTextareaAutosize"
-                    cdkAutosizeMinRows="1"
-                    cdkAutosizeMaxRows="8"
+                    [appAutoresize]="day.notes"
+                    rows="1"
                     class="notes-textarea"
                     [id]="'input-' + rowIndex + '-notes'"
                     [attr.data-row]="rowIndex"
@@ -360,17 +397,19 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
     }
 
     .notes-textarea {
+      display: block;
       width: 100%;
-      min-height: 28px;
-      padding: 5px 8px;
+      min-height: 30px;
+      padding: 4px 8px;
       border: 1px solid transparent;
       border-radius: 4px;
       background: transparent;
       font-size: 13px;
       font-family: inherit;
-      line-height: 1.4;
+      line-height: 20px;
       resize: none;
       box-sizing: border-box;
+      overflow: hidden;
       transition: border-color 0.15s, background-color 0.15s;
 
       &:hover {
@@ -557,6 +596,7 @@ export class PersonDaysEditorComponent {
           lines.pop();
           textarea.value = (lines.length > 0 ? lines.join('\n') + '\n' : '') + textAfter;
           day.notes = textarea.value;
+          textarea.dispatchEvent(new Event('input'));
           this.triggerUpdate();
         } else {
           event.preventDefault();
@@ -564,6 +604,7 @@ export class PersonDaysEditorComponent {
           textarea.value = newText;
           day.notes = newText;
           textarea.selectionStart = textarea.selectionEnd = cursorPos + 1 + bullet.length;
+          textarea.dispatchEvent(new Event('input'));
           this.triggerUpdate();
         }
       }
