@@ -64,7 +64,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                   <span class="task-header-text">{{ task }}</span>
                 </th>
               }
-              <th class="col-notes">Tages-Notizen / Bulletpoints</th>
+              <th class="col-notes">Tätigkeit</th>
               <th class="col-actions">Aktionen</th>
             </tr>
           </thead>
