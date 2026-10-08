@@ -293,7 +293,8 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
       display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       overflow: hidden;
     }
 
@@ -311,6 +312,7 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.3px;
+      flex-shrink: 0;
 
       &.badge-hours {
         background: #e6fcf5;
@@ -345,8 +347,15 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
     .item-action-btn {
       width: 24px;
       height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      padding: 0;
       line-height: 24px;
       margin-left: 4px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       opacity: 0.5;
 
       &:hover {
@@ -357,6 +366,10 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
         font-size: 16px;
         width: 16px;
         height: 16px;
+        line-height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 

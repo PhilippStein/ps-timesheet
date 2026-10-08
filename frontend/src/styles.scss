@@ -96,3 +96,61 @@ html, body {
     }
   }
 }
+
+// Compact action buttons for navigation items (Material MDC override)
+.item-action-btn.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 24px !important;
+  --mdc-icon-button-icon-size: 16px !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  line-height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+
+  .mat-mdc-button-touch-target {
+    display: none !important;
+  }
+
+  mat-icon {
+    font-size: 16px !important;
+    width: 16px !important;
+    height: 16px !important;
+    line-height: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+.collapse-toggle-btn.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 32px !important;
+  --mdc-icon-button-icon-size: 20px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  line-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  .mat-mdc-button-touch-target {
+    display: none !important;
+  }
+
+  mat-icon {
+    font-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
