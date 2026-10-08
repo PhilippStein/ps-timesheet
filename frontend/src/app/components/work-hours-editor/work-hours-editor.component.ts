@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetDay } from '../../models/timesheet.model';
+import { DateUtils } from '../../utils/date-utils';
 
 @Component({
   selector: 'app-work-hours-editor',
@@ -58,7 +59,10 @@ import { TimesheetDay } from '../../models/timesheet.model';
           </thead>
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
-              <tr [class.weekend-row]="day.isWeekend || day.weekend" [class.has-hours]="day.netHours && day.netHours > 0">
+              <tr [class.weekend-row]="day.isWeekend || day.weekend"
+                  [class.has-hours]="day.netHours && day.netHours > 0"
+                  [class.hidden-weekend]="isRowHidden(day)"
+                  [class.week-separator]="isWeekSeparator(rowIndex)">
                 <td class="col-date">
                   <div class="date-day-cell">
                     <span class="day-badge" [class.weekend-badge]="day.isWeekend || day.weekend">{{ day.dayOfWeek }}</span>
@@ -128,7 +132,7 @@ import { TimesheetDay } from '../../models/timesheet.model';
                       mat-icon-button
                       class="row-action-btn"
                       (click)="duplicateFromPrevious(rowIndex)"
-                      [disabled]="rowIndex === 0"
+                      [disabled]="getPreviousVisibleRowIndex(rowIndex) < 0"
                       matTooltip="Vortag kopieren (Ctrl+D)"
                       aria-label="Vortag kopieren">
                       <mat-icon>content_copy</mat-icon>
@@ -289,6 +293,14 @@ import { TimesheetDay } from '../../models/timesheet.model';
             color: #0ca678;
           }
         }
+      }
+
+      tr.hidden-weekend {
+        display: none !important;
+      }
+
+      tr.week-separator td {
+        border-top: 2px solid #adb5bd;
       }
 
       tr.has-hours {
@@ -508,9 +520,68 @@ export class WorkHoursEditorComponent {
     return val;
   }
 
+  isRowHidden(day: TimesheetDay): boolean {
+    if (!this.state.hideEmptyWeekends()) {
+      return false;
+    }
+    const isWeekend = day.isWeekend || day.weekend;
+    if (!isWeekend) {
+      return false;
+    }
+    const hasStartTime = day.startTime && day.startTime.trim().length > 0;
+    const hasEndTime = day.endTime && day.endTime.trim().length > 0;
+    const hasPause = day.pauseMinutes != null && day.pauseMinutes > 0;
+    const hasComment = day.comment && day.comment.trim().length > 0;
+    const hasNetHours = day.netHours != null && day.netHours > 0;
+    return !hasStartTime && !hasEndTime && !hasPause && !hasComment && !hasNetHours;
+  }
+
+  isWeekSeparator(rowIndex: number): boolean {
+    if (!this.state.hideEmptyWeekends()) {
+      return false;
+    }
+    const days = this.state.activeMonthData()?.days;
+    if (!days || rowIndex <= 0) {
+      return false;
+    }
+    const currentDay = days[rowIndex];
+    if (this.isRowHidden(currentDay)) {
+      return false;
+    }
+    const prevIndex = this.getPreviousVisibleRowIndex(rowIndex);
+    if (prevIndex < 0) {
+      return false;
+    }
+    const prevDay = days[prevIndex];
+    return DateUtils.isDifferentWeek(prevDay.date, currentDay.date);
+  }
+
+  getPreviousVisibleRowIndex(currentIndex: number): number {
+    const days = this.state.activeMonthData()?.days;
+    if (!days) return currentIndex - 1;
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (!this.isRowHidden(days[i])) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  getNextVisibleRowIndex(currentIndex: number): number {
+    const days = this.state.activeMonthData()?.days;
+    if (!days) return currentIndex + 1;
+    for (let i = currentIndex + 1; i < days.length; i++) {
+      if (!this.isRowHidden(days[i])) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   duplicateFromPrevious(rowIndex: number) {
-    if (rowIndex > 0) {
-      this.state.duplicateDay(rowIndex - 1, rowIndex);
+    const prevIndex = this.getPreviousVisibleRowIndex(rowIndex);
+    if (prevIndex >= 0) {
+      this.state.duplicateDay(prevIndex, rowIndex);
     }
   }
 
@@ -539,11 +610,13 @@ export class WorkHoursEditorComponent {
   handleCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      // Move down to the same column on the next row
-      const nextRow = rowIndex + 1;
-      const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
-      if (nextInput) {
-        nextInput.focus();
+      // Move down to the same column on the next visible row
+      const nextRow = this.getNextVisibleRowIndex(rowIndex);
+      if (nextRow >= 0) {
+        const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
+        if (nextInput) {
+          nextInput.focus();
+        }
       }
     }
   }

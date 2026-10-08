@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
+import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
+import { AppConfigDTO, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
 import { TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
 import { TimesheetApiService } from './timesheet-api.service';
 
@@ -21,6 +21,8 @@ export class TimesheetStateService {
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
   readonly isNavCollapsed = signal<boolean>(false);
+  readonly hideEmptyWeekends = signal<boolean>(false);
+  readonly configPath = signal<string>('');
 
   // Derived Computations
   readonly availableYears = computed<YearNodeDTO[]>(() => {
@@ -49,7 +51,44 @@ export class TimesheetStateService {
 
   constructor() {
     this.initAutoSave();
-    this.loadProjects();
+    this.loadConfig();
+  }
+
+  loadConfig() {
+    if (typeof this.api?.getConfig !== 'function') {
+      this.loadProjects();
+      return;
+    }
+    this.isLoading.set(true);
+    this.api.getConfig().subscribe({
+      next: (cfg) => {
+        this.configPath.set(cfg.configPath);
+        this.hideEmptyWeekends.set(cfg.hideEmptyWeekends ?? false);
+        this.projects.set(cfg.projects);
+        this.isLoading.set(false);
+        if (cfg.projects.length > 0 && !this.selectedProject()) {
+          this.selectProject(cfg.projects[0]);
+        }
+      },
+      error: () => {
+        this.loadProjects();
+      }
+    });
+  }
+
+  saveGlobalSettings(hideEmptyWeekends: boolean): Observable<AppConfigDTO> {
+    const payload = {
+      projects: this.projects(),
+      hideEmptyWeekends
+    };
+    return this.api.updateConfig(payload).pipe(
+      tap(saved => {
+        this.hideEmptyWeekends.set(saved.hideEmptyWeekends ?? hideEmptyWeekends);
+        if (saved.configPath) {
+          this.configPath.set(saved.configPath);
+        }
+      })
+    );
   }
 
   private initAutoSave() {

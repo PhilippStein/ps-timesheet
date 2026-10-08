@@ -29,7 +29,8 @@ public class ConfigResource {
                 : "";
         return Response.ok(Map.of(
                 "configPath", activePath,
-                "projects", config.getProjects()
+                "projects", config.getProjects(),
+                "hideEmptyWeekends", config.isHideEmptyWeekends()
         )).build();
     }
 

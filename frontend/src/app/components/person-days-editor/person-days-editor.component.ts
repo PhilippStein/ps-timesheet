@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetDay } from '../../models/timesheet.model';
+import { DateUtils } from '../../utils/date-utils';
 import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-dialog.component';
 
 @Directive({
@@ -107,7 +108,10 @@ export class AutoresizeDirective implements AfterViewInit {
           </thead>
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
-              <tr [class.weekend-row]="day.isWeekend || day.weekend" [class.has-hours]="day.totalPt && day.totalPt > 0">
+              <tr [class.weekend-row]="day.isWeekend || day.weekend"
+                  [class.has-hours]="day.totalPt && day.totalPt > 0"
+                  [class.hidden-weekend]="isRowHidden(day)"
+                  [class.week-separator]="isWeekSeparator(rowIndex)">
                 <td class="col-date">
                   <div class="date-day-cell">
                     <span class="day-badge" [class.weekend-badge]="day.isWeekend || day.weekend">{{ day.dayOfWeek }}</span>
@@ -155,7 +159,7 @@ export class AutoresizeDirective implements AfterViewInit {
                       mat-icon-button
                       class="row-action-btn"
                       (click)="duplicateFromPrevious(rowIndex)"
-                      [disabled]="rowIndex === 0"
+                      [disabled]="getPreviousVisibleRowIndex(rowIndex) < 0"
                       matTooltip="Vortag kopieren (Ctrl+D)"
                       aria-label="Vortag kopieren">
                       <mat-icon>content_copy</mat-icon>
@@ -317,6 +321,14 @@ export class AutoresizeDirective implements AfterViewInit {
         .date-text {
           color: #868e96;
         }
+      }
+
+      tr.hidden-weekend {
+        display: none !important;
+      }
+
+      tr.week-separator td {
+        border-top: 2px solid #adb5bd;
       }
 
       tr.has-hours {
@@ -545,9 +557,66 @@ export class PersonDaysEditorComponent {
     });
   }
 
+  isRowHidden(day: TimesheetDay): boolean {
+    if (!this.state.hideEmptyWeekends()) {
+      return false;
+    }
+    const isWeekend = day.isWeekend || day.weekend;
+    if (!isWeekend) {
+      return false;
+    }
+    const hasPt = day.totalPt != null && day.totalPt > 0;
+    const hasAllocations = day.taskAllocations && Object.values(day.taskAllocations).some(v => v != null && !isNaN(v) && v > 0);
+    const hasNotes = day.notes && day.notes.trim().length > 0;
+    return !hasPt && !hasAllocations && !hasNotes;
+  }
+
+  isWeekSeparator(rowIndex: number): boolean {
+    if (!this.state.hideEmptyWeekends()) {
+      return false;
+    }
+    const days = this.state.activeMonthData()?.days;
+    if (!days || rowIndex <= 0) {
+      return false;
+    }
+    const currentDay = days[rowIndex];
+    if (this.isRowHidden(currentDay)) {
+      return false;
+    }
+    const prevIndex = this.getPreviousVisibleRowIndex(rowIndex);
+    if (prevIndex < 0) {
+      return false;
+    }
+    const prevDay = days[prevIndex];
+    return DateUtils.isDifferentWeek(prevDay.date, currentDay.date);
+  }
+
+  getPreviousVisibleRowIndex(currentIndex: number): number {
+    const days = this.state.activeMonthData()?.days;
+    if (!days) return currentIndex - 1;
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (!this.isRowHidden(days[i])) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  getNextVisibleRowIndex(currentIndex: number): number {
+    const days = this.state.activeMonthData()?.days;
+    if (!days) return currentIndex + 1;
+    for (let i = currentIndex + 1; i < days.length; i++) {
+      if (!this.isRowHidden(days[i])) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
   duplicateFromPrevious(rowIndex: number) {
-    if (rowIndex > 0) {
-      this.state.duplicateDay(rowIndex - 1, rowIndex);
+    const prevIndex = this.getPreviousVisibleRowIndex(rowIndex);
+    if (prevIndex >= 0) {
+      this.state.duplicateDay(prevIndex, rowIndex);
     }
   }
 
@@ -596,10 +665,12 @@ export class PersonDaysEditorComponent {
   handleCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      const nextRow = rowIndex + 1;
-      const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
-      if (nextInput) {
-        nextInput.focus();
+      const nextRow = this.getNextVisibleRowIndex(rowIndex);
+      if (nextRow >= 0) {
+        const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
+        if (nextInput) {
+          nextInput.focus();
+        }
       }
     }
   }
@@ -607,11 +678,13 @@ export class PersonDaysEditorComponent {
   handleNotesKeydown(event: KeyboardEvent, day: TimesheetDay, rowIndex: number) {
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
-      // Commit and jump to next row notes or next day
-      const nextRow = rowIndex + 1;
-      const nextNotes = document.getElementById(`input-${nextRow}-notes`);
-      if (nextNotes) {
-        nextNotes.focus();
+      // Commit and jump to next visible row notes or next day
+      const nextRow = this.getNextVisibleRowIndex(rowIndex);
+      if (nextRow >= 0) {
+        const nextNotes = document.getElementById(`input-${nextRow}-notes`);
+        if (nextNotes) {
+          nextNotes.focus();
+        }
       }
       return;
     }

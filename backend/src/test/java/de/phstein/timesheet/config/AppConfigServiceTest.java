@@ -34,6 +34,7 @@ class AppConfigServiceTest {
         AppConfig config = appConfigService.loadConfig();
 
         assertThat(config).isNotNull();
+        assertThat(config.isHideEmptyWeekends()).isFalse();
         assertThat(config.getProjects()).hasSize(2);
         assertThat(config.getProjects().get(0).getName()).isEqualTo("Blubb");
         assertThat(config.getProjects().get(0).getTemplate()).isEqualTo("WorkHours");
@@ -66,6 +67,20 @@ class AppConfigServiceTest {
         assertThat(project.getBasePath()).isEqualTo("/tmp/custom");
         assertThat(project.getTemplate()).isEqualTo("PersonDays");
         assertThat(project.getDefaultTasks()).containsExactly("Feature", "Bugfix");
+    }
+
+    @Test
+    void shouldSaveAndLoadHideEmptyWeekendsSetting() {
+        Path configFile = tempDir.resolve(".pstimesheet.yaml");
+        appConfigService.setCustomConfigPathForTesting(configFile);
+        AppConfig config = appConfigService.loadConfig();
+        assertThat(config.isHideEmptyWeekends()).isFalse();
+
+        config.setHideEmptyWeekends(true);
+        appConfigService.saveConfig(config);
+
+        AppConfig reloaded = appConfigService.loadConfig();
+        assertThat(reloaded.isHideEmptyWeekends()).isTrue();
     }
 
     @Test

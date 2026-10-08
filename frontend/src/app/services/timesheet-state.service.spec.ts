@@ -9,6 +9,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 describe('TimesheetStateService', () => {
   let service: TimesheetStateService;
   let apiSpy: {
+    getConfig: ReturnType<typeof vi.fn>;
+    updateConfig: ReturnType<typeof vi.fn>;
     getProjects: ReturnType<typeof vi.fn>;
     getProjectTree: ReturnType<typeof vi.fn>;
     getMonth: ReturnType<typeof vi.fn>;
@@ -48,6 +50,8 @@ describe('TimesheetStateService', () => {
 
   beforeEach(() => {
     apiSpy = {
+      getConfig: vi.fn().mockReturnValue(of({ configPath: '/home/user/.pstimesheet.yaml', projects: mockProjects, hideEmptyWeekends: false })),
+      updateConfig: vi.fn().mockReturnValue(of({ configPath: '/home/user/.pstimesheet.yaml', projects: mockProjects, hideEmptyWeekends: true })),
       getProjects: vi.fn().mockReturnValue(of(mockProjects)),
       getProjectTree: vi.fn().mockReturnValue(of(mockTree)),
       getMonth: vi.fn().mockReturnValue(of(mockMonthData)),
@@ -64,9 +68,20 @@ describe('TimesheetStateService', () => {
     service = TestBed.inject(TimesheetStateService);
   });
 
-  it('should initialize and load projects', () => {
+  it('should initialize and load projects and config', () => {
     expect(service.projects().length).toBe(2);
     expect(service.selectedProject()?.name).toBe('ProjHours');
+    expect(service.configPath()).toBe('/home/user/.pstimesheet.yaml');
+    expect(service.hideEmptyWeekends()).toBe(false);
+  });
+
+  it('should update global settings for hideEmptyWeekends', () => {
+    service.saveGlobalSettings(true).subscribe();
+    expect(apiSpy.updateConfig).toHaveBeenCalledWith({
+      projects: mockProjects,
+      hideEmptyWeekends: true
+    });
+    expect(service.hideEmptyWeekends()).toBe(true);
   });
 
   it('should duplicate day data correctly for WorkHours', () => {

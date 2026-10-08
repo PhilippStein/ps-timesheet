@@ -8,6 +8,12 @@ export interface ProjectConfig {
 export interface AppConfigDTO {
   configPath: string;
   projects: ProjectConfig[];
+  hideEmptyWeekends?: boolean;
+}
+
+export interface AppConfigUpdateDTO {
+  projects: ProjectConfig[];
+  hideEmptyWeekends: boolean;
 }
 
 export interface MonthNodeDTO {

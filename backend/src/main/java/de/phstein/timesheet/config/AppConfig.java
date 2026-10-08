@@ -11,6 +11,7 @@ import java.util.List;
 public class AppConfig {
 
     private List<ProjectConfig> projects = new ArrayList<>();
+    private boolean hideEmptyWeekends = false;
 
     public AppConfig() {
     }
@@ -21,11 +22,26 @@ public class AppConfig {
         }
     }
 
+    public AppConfig(List<ProjectConfig> projects, boolean hideEmptyWeekends) {
+        if (projects != null) {
+            this.projects = new ArrayList<>(projects);
+        }
+        this.hideEmptyWeekends = hideEmptyWeekends;
+    }
+
     public List<ProjectConfig> getProjects() {
         return projects;
     }
 
     public void setProjects(List<ProjectConfig> projects) {
         this.projects = projects != null ? new ArrayList<>(projects) : new ArrayList<>();
+    }
+
+    public boolean isHideEmptyWeekends() {
+        return hideEmptyWeekends;
+    }
+
+    public void setHideEmptyWeekends(boolean hideEmptyWeekends) {
+        this.hideEmptyWeekends = hideEmptyWeekends;
     }
 }

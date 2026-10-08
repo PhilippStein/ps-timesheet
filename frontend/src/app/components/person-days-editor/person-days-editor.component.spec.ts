@@ -70,4 +70,69 @@ describe('PersonDaysEditorComponent', () => {
     expect(component.countTotalWorkDays()).toBe(2);
     expect(component.countLoggedDays()).toBe(1);
   });
+
+  it('should identify empty weekend rows and hide them when setting is enabled', () => {
+    const emptyWeekend = { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, totalPt: 0, taskAllocations: {}, notes: null };
+    const filledWeekend = { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, totalPt: 0.5, taskAllocations: { 'Dev': 0.5 }, notes: 'Testing' };
+    const weekday = { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, totalPt: 0, taskAllocations: {}, notes: null };
+
+    stateService.hideEmptyWeekends.set(false);
+    expect(component.isRowHidden(emptyWeekend)).toBe(false);
+    expect(component.isRowHidden(filledWeekend)).toBe(false);
+    expect(component.isRowHidden(weekday)).toBe(false);
+
+    stateService.hideEmptyWeekends.set(true);
+    expect(component.isRowHidden(emptyWeekend)).toBe(true);
+    expect(component.isRowHidden(filledWeekend)).toBe(false);
+    expect(component.isRowHidden(weekday)).toBe(false);
+  });
+
+  it('should skip hidden weekends when finding previous and next visible row index', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, totalPt: 1.0, taskAllocations: { 'Dev': 1.0 } },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, totalPt: 0, taskAllocations: {} },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, totalPt: 0, taskAllocations: {} },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, totalPt: 0, taskAllocations: {} }
+      ]
+    });
+
+    stateService.hideEmptyWeekends.set(true);
+    expect(component.getPreviousVisibleRowIndex(3)).toBe(0);
+    expect(component.getNextVisibleRowIndex(0)).toBe(3);
+  });
+
+  it('should identify week separators when weekends are hidden', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, totalPt: 1.0, taskAllocations: { 'Dev': 1.0 } },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, totalPt: 1.0, taskAllocations: { 'Dev': 1.0 } },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, totalPt: 0, taskAllocations: {} },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, totalPt: 0, taskAllocations: {} },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, totalPt: 1.0, taskAllocations: { 'Dev': 1.0 } },
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, totalPt: 1.0, taskAllocations: { 'Dev': 1.0 } }
+      ]
+    });
+
+    stateService.hideEmptyWeekends.set(false);
+    expect(component.isWeekSeparator(0)).toBe(false); // First row
+    expect(component.isWeekSeparator(1)).toBe(false); // Freitag
+    expect(component.isWeekSeparator(4)).toBe(false); // Montag when weekends are visible
+
+    stateService.hideEmptyWeekends.set(true);
+    expect(component.isWeekSeparator(0)).toBe(false); // First row
+    expect(component.isWeekSeparator(1)).toBe(false); // Same week as Thursday
+    expect(component.isWeekSeparator(4)).toBe(true);  // Montag is start of new week after Friday
+    expect(component.isWeekSeparator(5)).toBe(false); // Dienstag is same week as Monday
+  });
 });

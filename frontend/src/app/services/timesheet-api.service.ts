@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AppConfigDTO, ProjectConfig, ProjectTreeDTO } from '../models/project.model';
+import { AppConfigDTO, AppConfigUpdateDTO, ProjectConfig, ProjectTreeDTO } from '../models/project.model';
 import { TimesheetMonth } from '../models/timesheet.model';
 
 @Injectable({
@@ -13,6 +13,10 @@ export class TimesheetApiService {
 
   getConfig(): Observable<AppConfigDTO> {
     return this.http.get<AppConfigDTO>(`${this.baseUrl}/api/config`);
+  }
+
+  updateConfig(config: AppConfigUpdateDTO): Observable<AppConfigDTO> {
+    return this.http.put<AppConfigDTO>(`${this.baseUrl}/api/config`, config);
   }
 
   getProjects(): Observable<ProjectConfig[]> {
