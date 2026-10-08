@@ -32,6 +32,7 @@ public class TimesheetDayDTO {
     private Double netHours; // Computed on the fly
 
     // PersonDays fields
+    private String location; // "Remote", "Vor-Ort", "Urlaub", "Krank"
     private Map<String, Double> taskAllocations = new HashMap<>(); // taskName -> PT
     private String notes; // Multiline bulletpoints
     private List<String> notesList = new ArrayList<>();
@@ -118,6 +119,14 @@ public class TimesheetDayDTO {
 
     public void setNetHours(Double netHours) {
         this.netHours = netHours;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public Map<String, Double> getTaskAllocations() {

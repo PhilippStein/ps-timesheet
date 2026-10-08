@@ -264,6 +264,7 @@ export class TimesheetStateService {
       const target = month.days[toIndex];
 
       target.status = source.status;
+      target.location = source.location;
 
       // WorkHours template duplication
       target.startTime = source.startTime;

@@ -94,6 +94,27 @@ describe('TimesheetStateService', () => {
     expect(targetDay?.pauseMinutes).toBe(30);
   });
 
+  it('should duplicate day data correctly for PersonDays including location and notesList', () => {
+    const personDaysMonth: TimesheetMonth = {
+      projectName: 'ProjDays',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, location: 'Remote', status: null, taskAllocations: { 'Dev': 1.0 }, notes: '- Daily', notesList: ['Daily'] },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false }
+      ]
+    };
+    service.activeMonthData.set(JSON.parse(JSON.stringify(personDaysMonth)));
+    service.duplicateDay(0, 1);
+
+    const targetDay = service.activeMonthData()?.days[1];
+    expect(targetDay?.location).toBe('Remote');
+    expect(targetDay?.taskAllocations).toEqual({ 'Dev': 1.0 });
+    expect(targetDay?.notesList).toEqual(['Daily']);
+  });
+
   it('should refresh selectedProject when config is reloaded with updated project data', () => {
     const updatedProjects: ProjectConfig[] = [
       {

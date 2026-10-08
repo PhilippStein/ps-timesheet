@@ -59,6 +59,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
             <tr>
               <th class="col-date">Datum</th>
               <th class="col-status">Status</th>
+              <th class="col-location">Ort</th>
               @for (task of state.activeMonthData()?.taskColumns; track task; let taskIndex = $index) {
                 <th class="col-task font-mono" [matTooltip]="task">
                   <span class="task-header-text">{{ task }}</span>
@@ -98,6 +99,22 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                     <option [value]="DayStatus.KRANK">Krank</option>
                   </select>
                 </td>
+                <td class="col-location">
+                  <select
+                    class="cell-select location-select"
+                    [id]="'input-' + rowIndex + '-location'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="2"
+                    [ngModel]="day.location || ''"
+                    (ngModelChange)="setLocation(day, $event)"
+                    (keydown)="handleCellKeydown($event, rowIndex, 2)">
+                    <option value="">-</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Vor-Ort">Vor-Ort</option>
+                    <option value="Urlaub">Urlaub</option>
+                    <option value="Krank">Krank</option>
+                  </select>
+                </td>
 
                 <!-- DYNAMIC TASK COLUMNS -->
                 @for (task of state.activeMonthData()?.taskColumns; track task; let taskIndex = $index) {
@@ -110,11 +127,11 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                       class="cell-input pt-input font-mono"
                       [id]="'input-' + rowIndex + '-task-' + taskIndex"
                       [attr.data-row]="rowIndex"
-                      [attr.data-col]="taskIndex + 2"
+                      [attr.data-col]="taskIndex + 3"
                       [ngModel]="getTaskPt(day, task)"
                       (ngModelChange)="setTaskPt(day, task, $event)"
                       (blur)="triggerUpdate()"
-                      (keydown)="handleCellKeydown($event, rowIndex, taskIndex + 2)"
+                      (keydown)="handleCellKeydown($event, rowIndex, taskIndex + 3)"
                       placeholder="0.0">
                   </td>
                 }
@@ -205,7 +222,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           </tbody>
           <tfoot>
             <tr class="totals-row">
-              <td colspan="2" class="total-label">Summen:</td>
+              <td colspan="3" class="total-label">Summen:</td>
               @for (task of state.activeMonthData()?.taskColumns; track task) {
                 <td class="col-task font-mono task-total-cell">
                   {{ formatPt(state.activeMonthData()?.taskTotals?.[task]) }}
@@ -368,6 +385,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
 
     .col-date { width: 110px; }
     .col-status { width: 95px; }
+    .col-location { width: 95px; }
     .col-task {
       width: 100px;
       min-width: 90px;
@@ -746,6 +764,18 @@ export class PersonDaysEditorComponent {
 
   setStatus(day: TimesheetDay, value: string | DayStatus | null) {
     day.status = value ? (value as DayStatus) : null;
+    if (day.status === DayStatus.URLAUB || day.status === 'Urlaub') {
+      day.location = 'Urlaub';
+    } else if (day.status === DayStatus.KRANK || day.status === 'Krank') {
+      day.location = 'Krank';
+    } else if (!day.status && (day.location === 'Urlaub' || day.location === 'Krank')) {
+      day.location = null;
+    }
+    this.triggerUpdate();
+  }
+
+  setLocation(day: TimesheetDay, value: string | null) {
+    day.location = value ? value : null;
     this.triggerUpdate();
   }
 
@@ -906,7 +936,8 @@ export class PersonDaysEditorComponent {
     const hasAllocations = day.taskAllocations && Object.values(day.taskAllocations).some(v => v != null && !isNaN(v) && v > 0);
     const hasNotes = (day.notes && day.notes.trim().length > 0) || (day.notesList && day.notesList.length > 0);
     const hasStatus = !!day.status && String(day.status).trim().length > 0;
-    return !hasPt && !hasAllocations && !hasNotes && !hasStatus;
+    const hasLocation = !!day.location && String(day.location).trim().length > 0;
+    return !hasPt && !hasAllocations && !hasNotes && !hasStatus && !hasLocation;
   }
 
   isWeekSeparator(rowIndex: number): boolean {
@@ -962,6 +993,7 @@ export class PersonDaysEditorComponent {
     this.state.updateActiveMonthData(month => {
       const day = month.days[rowIndex];
       day.status = null;
+      day.location = this.isWeekend(day) ? null : 'Remote';
       day.taskAllocations = {};
       day.notes = null;
       day.notesList = [];

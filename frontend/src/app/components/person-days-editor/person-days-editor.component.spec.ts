@@ -209,4 +209,62 @@ describe('PersonDaysEditorComponent', () => {
     expect(templates).toContain('SP Weekly');
     expect(templates).not.toContain('Daily');
   });
+
+  it('should automatically set location to Urlaub or Krank when status changes, and allow manual location selection', () => {
+    const day = stateService.activeMonthData()?.days[0];
+    expect(day).toBeDefined();
+    if (!day) return;
+
+    // Initially no location
+    expect(day.location).toBeUndefined();
+
+    // Set location manually
+    component.setLocation(day, 'Remote');
+    expect(day.location).toBe('Remote');
+
+    component.setLocation(day, 'Vor-Ort');
+    expect(day.location).toBe('Vor-Ort');
+
+    // Changing status to Urlaub should set location to Urlaub
+    component.setStatus(day, DayStatus.URLAUB);
+    expect(day.status).toBe(DayStatus.URLAUB);
+    expect(day.location).toBe('Urlaub');
+
+    // Changing status to Krank should set location to Krank
+    component.setStatus(day, DayStatus.KRANK);
+    expect(day.status).toBe(DayStatus.KRANK);
+    expect(day.location).toBe('Krank');
+
+    // Resetting status to Regulär (null) should clear location if it was Krank/Urlaub
+    component.setStatus(day, null);
+    expect(day.status).toBeNull();
+    expect(day.location).toBeNull();
+
+    // Setting manual location and then changing status to Regulär should not clear manual location
+    component.setLocation(day, 'Remote');
+    component.setStatus(day, null);
+    expect(day.location).toBe('Remote');
+
+    // Clearing row on a weekday should reset location to 'Remote'
+    component.clearRow(0);
+    const clearedDay = stateService.activeMonthData()?.days[0];
+    expect(clearedDay?.location).toBe('Remote');
+
+    // Clearing row on a weekend should reset location to null
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, location: 'Vor-Ort' },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, location: 'Remote' }
+      ]
+    });
+    component.clearRow(0);
+    expect(stateService.activeMonthData()?.days[0].location).toBe('Remote');
+    component.clearRow(1);
+    expect(stateService.activeMonthData()?.days[1].location).toBeNull();
+  });
 });

@@ -9,6 +9,7 @@ export interface TimesheetDay {
   isWeekend: boolean;
   weekend?: boolean;
   status?: DayStatus | string | null;
+  location?: string | null;
   startTime?: string | null;
   endTime?: string | null;
   pauseMinutes?: number | null;

@@ -35,6 +35,14 @@ class CsvPersonDaysHandlerTest {
         assertThat(month.getTaskColumns()).containsExactly("Konzeption", "Entwicklung", "Review");
         assertThat(month.getDays()).hasSize(31);
         assertThat(month.getTotalPt()).isEqualTo(0.0);
+
+        // 2026-03-01 is a Sunday (weekend) -> location should be null
+        assertThat(month.getDays().get(0).isWeekend()).isTrue();
+        assertThat(month.getDays().get(0).getLocation()).isNull();
+
+        // 2026-03-02 is a Monday (workday) -> location should be prefilled with "Remote"
+        assertThat(month.getDays().get(1).isWeekend()).isFalse();
+        assertThat(month.getDays().get(1).getLocation()).isEqualTo("Remote");
     }
 
     @Test
@@ -45,11 +53,13 @@ class CsvPersonDaysHandlerTest {
         TimesheetDayDTO day3 = month.getDays().get(2); // 2026-03-03
         day3.setTaskAllocations(Map.of("Konzeption", 0.25, "Entwicklung", 0.75));
         day3.setNotes("- Meilenstein 1 erfolgreich abgeschlossen\n- Deployment vorbereitet");
+        day3.setLocation("Remote");
 
         TimesheetDayDTO day4 = month.getDays().get(3); // 2026-03-04
         day4.setTaskAllocations(Map.of("Entwicklung", 0.8, "Review", 0.2));
         day4.setNotes("- Bugfix im Backend");
         day4.setStatus(DayStatus.KRANK);
+        day4.setLocation("Krank");
 
         handler.writeMonth(csvFile, month);
 
@@ -66,6 +76,7 @@ class CsvPersonDaysHandlerTest {
         assertThat(loadedDay3.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay3.getNotes()).isEqualTo("- Meilenstein 1 erfolgreich abgeschlossen\n- Deployment vorbereitet");
         assertThat(loadedDay3.getNotesList()).containsExactly("Meilenstein 1 erfolgreich abgeschlossen", "Deployment vorbereitet");
+        assertThat(loadedDay3.getLocation()).isEqualTo("Remote");
         assertThat(loadedDay3.getStatus()).isNull();
 
         TimesheetDayDTO loadedDay4 = loaded.getDays().get(3);
@@ -74,7 +85,23 @@ class CsvPersonDaysHandlerTest {
         assertThat(loadedDay4.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay4.getNotes()).isEqualTo("- Bugfix im Backend");
         assertThat(loadedDay4.getNotesList()).containsExactly("Bugfix im Backend");
+        assertThat(loadedDay4.getLocation()).isEqualTo("Krank");
         assertThat(loadedDay4.getStatus()).isEqualTo(DayStatus.KRANK);
+    }
+
+    @Test
+    void shouldReadLegacyCsvWithoutLocationColumn() throws IOException {
+        Path legacyCsv = tempDir.resolve("2026_02_Legacy.csv");
+        String content = "Date;DayOfWeek;Dev;QA;Notes;Status\n" +
+                "2026-02-02;Montag;0.5;0.5;- Legacy task;\n";
+        Files.writeString(legacyCsv, content);
+
+        TimesheetMonthDTO month = handler.readMonth(legacyCsv, "Legacy", 2026, 2);
+        assertThat(month.getTaskColumns()).containsExactly("Dev", "QA");
+        TimesheetDayDTO day = month.getDays().get(1); // 2026-02-02
+        assertThat(day.getLocation()).isNull();
+        assertThat(day.getTaskAllocations()).containsEntry("Dev", 0.5);
+        assertThat(day.getNotesList()).containsExactly("Legacy task");
     }
 
     @Test

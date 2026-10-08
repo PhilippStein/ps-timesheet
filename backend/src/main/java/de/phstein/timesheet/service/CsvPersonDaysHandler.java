@@ -51,11 +51,15 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
 
         for (int day = 1; day <= daysInMonth; day++) {
             LocalDate date = LocalDate.of(year, month, day);
+            boolean isWeekend = DateUtils.isWeekend(date);
             TimesheetDayDTO dayDTO = new TimesheetDayDTO(
                     date.format(DateUtils.ISO_DATE_FORMATTER),
                     DateUtils.getGermanDayOfWeek(date),
-                    DateUtils.isWeekend(date)
+                    isWeekend
             );
+            if (!isWeekend) {
+                dayDTO.setLocation("Remote");
+            }
             days.add(dayDTO);
         }
 
@@ -82,9 +86,8 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                 for (String h : headerNames) {
                     if (!"Date".equalsIgnoreCase(h) &&
                             !"DayOfWeek".equalsIgnoreCase(h) &&
+                            !"Location".equalsIgnoreCase(h) &&
                             !"Notes".equalsIgnoreCase(h) &&
-                            !"Total_PT".equalsIgnoreCase(h) &&
-                            !"Comment".equalsIgnoreCase(h) &&
                             !"Status".equalsIgnoreCase(h)) {
                         dynamicTaskColumns.add(h);
                     }
@@ -120,6 +123,10 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                         }
                     }
                     dayDTO.setTaskAllocations(taskAllocations);
+
+                    String location = getRecordValue(record, headerMap, "Location", -1);
+
+                    dayDTO.setLocation(nullIfBlank(location));
 
                     String notes = getRecordValue(record, headerMap, "Notes", record.size() - 1);
                     dayDTO.setNotes(nullIfBlank(notes));
@@ -159,6 +166,7 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                 List<String> headers = new ArrayList<>();
                 headers.add("Date");
                 headers.add("DayOfWeek");
+                headers.add("Location");
                 headers.addAll(taskColumns);
                 headers.add("Notes");
                 headers.add("Status");
@@ -169,6 +177,7 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                     List<String> row = new ArrayList<>();
                     row.add(day.getDate() != null ? day.getDate() : "");
                     row.add(day.getDayOfWeek() != null ? day.getDayOfWeek() : "");
+                    row.add(day.getLocation() != null ? day.getLocation() : "");
 
                     Map<String, Double> alloc = day.getTaskAllocations() != null ? day.getTaskAllocations() : Map.of();
                     for (String task : taskColumns) {
