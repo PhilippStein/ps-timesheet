@@ -178,6 +178,23 @@ describe('PersonDaysEditorComponent', () => {
     expect(day.notes).toBe('- Daily');
   });
 
+  it('should support reordering bulletpoint notes via drag and drop', () => {
+    const day = stateService.activeMonthData()?.days[0];
+    expect(day).toBeDefined();
+    if (!day) return;
+
+    day.notesList = ['First', 'Second', 'Third'];
+    day.notes = '- First\n- Second\n- Third';
+
+    component.dropNote(day, { previousIndex: 0, currentIndex: 2 } as any);
+    expect(day.notesList).toEqual(['Second', 'Third', 'First']);
+    expect(day.notes).toBe('- Second\n- Third\n- First');
+
+    component.dropNote(day, { previousIndex: 1, currentIndex: 0 } as any);
+    expect(day.notesList).toEqual(['Third', 'Second', 'First']);
+    expect(day.notes).toBe('- Third\n- Second\n- First');
+  });
+
   it('should provide recurring and default notes suggestions', () => {
     stateService.selectedProject.set({
       name: 'Alpha',

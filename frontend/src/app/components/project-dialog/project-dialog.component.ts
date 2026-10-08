@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatChipsModule } from '@angular/material/chips';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ProjectConfig, RecurringNoteConfig } from '../../models/project.model';
 
 export interface ProjectDialogData {
@@ -29,7 +30,8 @@ export interface ProjectDialogData {
     MatButtonModule,
     MatIconModule,
     MatRadioModule,
-    MatChipsModule
+    MatChipsModule,
+    DragDropModule
   ],
   template: `
     <h2 mat-dialog-title>{{ data.isEdit ? 'Projekteinstellungen' : 'Neues Projekt erstellen' }}</h2>
@@ -67,9 +69,10 @@ export interface ProjectDialogData {
         @if (template === 'PersonDays') {
           <div class="config-section">
             <label class="section-label">Standard-Aufgaben (für neue Monate):</label>
-            <div class="items-list">
+            <div class="items-list" cdkDropList (cdkDropListDropped)="dropTask($event)">
               @for (task of defaultTasks; track $index) {
-                <div class="item-row">
+                <div class="item-row" cdkDrag>
+                  <mat-icon cdkDragHandle class="drag-handle" title="Verschieben">drag_indicator</mat-icon>
                   <mat-form-field appearance="outline" class="item-input">
                     <input matInput [(ngModel)]="defaultTasks[$index]" placeholder="Aufgabenname">
                   </mat-form-field>
@@ -86,9 +89,10 @@ export interface ProjectDialogData {
 
           <div class="config-section">
             <label class="section-label">Standard-Notizen / Vorlagen (Quick-Add):</label>
-            <div class="items-list">
+            <div class="items-list" cdkDropList (cdkDropListDropped)="dropDefaultNote($event)">
               @for (note of defaultNotes; track $index) {
-                <div class="item-row">
+                <div class="item-row" cdkDrag>
+                  <mat-icon cdkDragHandle class="drag-handle" title="Verschieben">drag_indicator</mat-icon>
                   <mat-form-field appearance="outline" class="item-input">
                     <input matInput [(ngModel)]="defaultNotes[$index]" placeholder="z.B. Daily, Code Review, Release">
                   </mat-form-field>
@@ -105,9 +109,10 @@ export interface ProjectDialogData {
 
           <div class="config-section">
             <label class="section-label">Wiederkehrende Notizen (nach Wochentag):</label>
-            <div class="items-list">
+            <div class="items-list" cdkDropList (cdkDropListDropped)="dropRecurringNote($event)">
               @for (recurring of recurringNotes; track $index) {
-                <div class="recurring-row">
+                <div class="recurring-row" cdkDrag>
+                  <mat-icon cdkDragHandle class="drag-handle" title="Verschieben">drag_indicator</mat-icon>
                   <mat-form-field appearance="outline" class="recurring-text-input">
                     <mat-label>Notiz-Text</mat-label>
                     <input matInput [(ngModel)]="recurring.text" placeholder="z.B. SP Weekly, Daily">
@@ -188,6 +193,27 @@ export interface ProjectDialogData {
       align-items: center;
       gap: 8px;
     }
+    .drag-handle {
+      cursor: grab;
+      color: #adb5bd;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      &:hover {
+        color: #495057;
+      }
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
     .item-input {
       flex: 1;
       margin-bottom: -16px;
@@ -245,12 +271,24 @@ export class ProjectDialogComponent {
     this.defaultTasks.splice(index, 1);
   }
 
+  dropTask(event: CdkDragDrop<string[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.defaultTasks, event.previousIndex, event.currentIndex);
+    this.defaultTasks = [...this.defaultTasks];
+  }
+
   addDefaultNote() {
     this.defaultNotes.push('');
   }
 
   removeDefaultNote(index: number) {
     this.defaultNotes.splice(index, 1);
+  }
+
+  dropDefaultNote(event: CdkDragDrop<string[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.defaultNotes, event.previousIndex, event.currentIndex);
+    this.defaultNotes = [...this.defaultNotes];
   }
 
   addRecurringNote() {
@@ -262,6 +300,12 @@ export class ProjectDialogComponent {
 
   removeRecurringNote(index: number) {
     this.recurringNotes.splice(index, 1);
+  }
+
+  dropRecurringNote(event: CdkDragDrop<RecurringNoteConfig[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.recurringNotes, event.previousIndex, event.currentIndex);
+    this.recurringNotes = [...this.recurringNotes];
   }
 
   isValid(): boolean {

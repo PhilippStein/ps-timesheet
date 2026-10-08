@@ -154,3 +154,24 @@ html, body {
     justify-content: center !important;
   }
 }
+
+// CDK Drag & Drop global styling
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  opacity: 0.95;
+  background-color: #ffffff;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3 !important;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging .cdk-drag:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}

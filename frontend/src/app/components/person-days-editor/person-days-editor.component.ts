@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { DayStatus, TimesheetDay } from '../../models/timesheet.model';
 import { DateUtils } from '../../utils/date-utils';
@@ -27,7 +28,8 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
     MatIconModule,
     MatTooltipModule,
     MatDialogModule,
-    MatMenuModule
+    MatMenuModule,
+    DragDropModule
   ],
   template: `
     <div class="editor-container" (keydown)="handleGlobalKeydown($event)">
@@ -139,19 +141,22 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                 <!-- ADDITIVE DAILY NOTES CHIPS & TEMPLATES -->
                 <td class="col-notes">
                   <div class="notes-cell-container">
-                    @for (note of getNotesList(day); track $index) {
-                      <span class="note-chip">
-                        <span class="note-chip-text">{{ note }}</span>
-                        <button
-                          type="button"
-                          class="note-chip-remove"
-                          (click)="removeNote(day, $index)"
-                          title="Notiz entfernen"
-                          aria-label="Notiz entfernen">
-                          <mat-icon>close</mat-icon>
-                        </button>
-                      </span>
-                    }
+                    <div class="notes-chips-list" cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="dropNote(day, $event)">
+                      @for (note of getNotesList(day); track $index) {
+                        <span class="note-chip" cdkDrag>
+                          <mat-icon cdkDragHandle class="chip-drag-handle" title="Verschieben">drag_indicator</mat-icon>
+                          <span class="note-chip-text">{{ note }}</span>
+                          <button
+                            type="button"
+                            class="note-chip-remove"
+                            (click)="removeNote(day, $index)"
+                            title="Notiz entfernen"
+                            aria-label="Notiz entfernen">
+                            <mat-icon>close</mat-icon>
+                          </button>
+                        </span>
+                      }
+                    </div>
 
                     @for (suggestion of getRecurringSuggestions(day); track suggestion) {
                       <button
@@ -526,6 +531,13 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       padding: 2px 0;
     }
 
+    .notes-chips-list {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+    }
+
     .note-chip {
       display: inline-flex;
       align-items: center;
@@ -538,6 +550,29 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       padding: 2px 6px;
       gap: 4px;
       max-width: 100%;
+    }
+
+    .chip-drag-handle {
+      font-size: 13px;
+      width: 13px;
+      height: 13px;
+      line-height: 13px;
+      cursor: grab;
+      color: #74c0fc;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-left: -2px;
+      user-select: none;
+
+      &:hover {
+        color: #1971c2;
+      }
+
+      &:active {
+        cursor: grabbing;
+      }
     }
 
     .note-chip-text {
@@ -854,6 +889,17 @@ export class PersonDaysEditorComponent {
       day.notes = this.formatNotes(list);
       this.triggerUpdate();
     }
+  }
+
+  dropNote(day: TimesheetDay, event: CdkDragDrop<string[]>) {
+    if (event.previousIndex === event.currentIndex) {
+      return;
+    }
+    const list = [...this.getNotesList(day)];
+    moveItemInArray(list, event.previousIndex, event.currentIndex);
+    day.notesList = list;
+    day.notes = this.formatNotes(list);
+    this.triggerUpdate();
   }
 
   getRecurringSuggestions(day: TimesheetDay): string[] {

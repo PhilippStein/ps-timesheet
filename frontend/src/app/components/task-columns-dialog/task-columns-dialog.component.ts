@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 export interface TaskColumnsDialogData {
   projectName: string;
@@ -24,7 +25,8 @@ export interface TaskColumnsDialogData {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    DragDropModule
   ],
   template: `
     <h2 mat-dialog-title>Aufgaben für {{ data.year }}-{{ data.month < 10 ? '0' + data.month : data.month }} anpassen</h2>
@@ -33,9 +35,10 @@ export interface TaskColumnsDialogData {
         Spalten für diesen konkreten Monat bearbeiten. Vorhandene Zeiterfassungen bleiben erhalten.
       </p>
 
-      <div class="tasks-container">
+      <div class="tasks-container" cdkDropList (cdkDropListDropped)="dropTask($event)">
         @for (task of tasks; track $index) {
-          <div class="task-row">
+          <div class="task-row" cdkDrag>
+            <mat-icon cdkDragHandle class="drag-handle" title="Verschieben">drag_indicator</mat-icon>
             <span class="task-num">{{ $index + 1 }}.</span>
             <mat-form-field appearance="outline" class="task-field">
               <input matInput [(ngModel)]="tasks[$index]" placeholder="Aufgabenname">
@@ -76,6 +79,27 @@ export interface TaskColumnsDialogData {
       align-items: center;
       gap: 8px;
     }
+    .drag-handle {
+      cursor: grab;
+      color: #adb5bd;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      &:hover {
+        color: #495057;
+      }
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
     .task-num {
       font-size: 13px;
       font-weight: 500;
@@ -105,6 +129,12 @@ export class TaskColumnsDialogComponent {
     if (this.tasks.length > 1) {
       this.tasks.splice(index, 1);
     }
+  }
+
+  dropTask(event: CdkDragDrop<string[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.tasks, event.previousIndex, event.currentIndex);
+    this.tasks = [...this.tasks];
   }
 
   isValid(): boolean {

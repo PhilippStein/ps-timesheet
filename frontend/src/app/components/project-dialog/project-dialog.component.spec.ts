@@ -65,4 +65,24 @@ describe('ProjectDialogComponent', () => {
     component.removeRecurringNote(0);
     expect(component.recurringNotes.length).toBe(0);
   });
+
+  it('should support reordering default tasks, default notes and recurring notes via drag and drop', () => {
+    component.defaultTasks = ['Task A', 'Task B', 'Task C'];
+    component.dropTask({ previousIndex: 0, currentIndex: 2 } as any);
+    expect(component.defaultTasks).toEqual(['Task B', 'Task C', 'Task A']);
+
+    component.defaultNotes = ['Note 1', 'Note 2', 'Note 3'];
+    component.dropDefaultNote({ previousIndex: 2, currentIndex: 0 } as any);
+    expect(component.defaultNotes).toEqual(['Note 3', 'Note 1', 'Note 2']);
+
+    component.recurringNotes = [
+      { text: 'Rec 1', days: ['Montag'] },
+      { text: 'Rec 2', days: ['Dienstag'] }
+    ];
+    component.dropRecurringNote({ previousIndex: 0, currentIndex: 1 } as any);
+    expect(component.recurringNotes).toEqual([
+      { text: 'Rec 2', days: ['Dienstag'] },
+      { text: 'Rec 1', days: ['Montag'] }
+    ]);
+  });
 });
