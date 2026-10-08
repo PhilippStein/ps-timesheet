@@ -94,6 +94,31 @@ describe('TimesheetStateService', () => {
     expect(targetDay?.pauseMinutes).toBe(30);
   });
 
+  it('should refresh selectedProject when config is reloaded with updated project data', () => {
+    const updatedProjects: ProjectConfig[] = [
+      {
+        name: 'ProjHours',
+        basePath: '/tmp/hours',
+        template: 'WorkHours',
+        defaultNotes: ['Daily', 'Review'],
+        recurringNotes: [{ text: 'SP Weekly', days: ['Mittwoch'] }]
+      },
+      { name: 'ProjDays', basePath: '/tmp/days', template: 'PersonDays' }
+    ];
+
+    apiSpy.getConfig.mockReturnValue(of({
+      configPath: '/home/user/.pstimesheet.yaml',
+      projects: updatedProjects,
+      hideEmptyWeekends: false
+    }));
+
+    service.loadConfig();
+
+    expect(service.selectedProject()?.name).toBe('ProjHours');
+    expect(service.selectedProject()?.defaultNotes).toEqual(['Daily', 'Review']);
+    expect(service.selectedProject()?.recurringNotes).toEqual([{ text: 'SP Weekly', days: ['Mittwoch'] }]);
+  });
+
   it('should toggle navigation collapse state', () => {
     expect(service.isNavCollapsed()).toBe(false);
     service.toggleNavCollapsed();

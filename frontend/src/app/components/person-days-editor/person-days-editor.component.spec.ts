@@ -161,4 +161,52 @@ describe('PersonDaysEditorComponent', () => {
     expect(component.isWeekSeparator(4)).toBe(true);  // Montag is start of new week after Friday
     expect(component.isWeekSeparator(5)).toBe(false); // Dienstag is same week as Monday
   });
+
+  it('should support adding, removing and formatting bulletpoint notes', () => {
+    const day = stateService.activeMonthData()?.days[0];
+    expect(day).toBeDefined();
+    if (!day) return;
+
+    expect(component.getNotesList(day)).toEqual(['Task 1']);
+
+    component.addNote(day, 'Daily');
+    expect(component.getNotesList(day)).toEqual(['Task 1', 'Daily']);
+    expect(day.notes).toBe('- Task 1\n- Daily');
+
+    component.removeNote(day, 0);
+    expect(component.getNotesList(day)).toEqual(['Daily']);
+    expect(day.notes).toBe('- Daily');
+  });
+
+  it('should provide recurring and default notes suggestions', () => {
+    stateService.selectedProject.set({
+      name: 'Alpha',
+      basePath: '/tmp/alpha',
+      template: 'PersonDays',
+      defaultNotes: ['Daily', 'Code Review'],
+      recurringNotes: [
+        { text: 'Daily', days: ['Donnerstag', 'Freitag'] },
+        { text: 'SP Weekly', days: ['Mittwoch'] },
+        { text: 'Dev Weekly', days: ['Donnerstag'] }
+      ]
+    });
+
+    const day = {
+      date: '2026-10-01',
+      dayOfWeek: 'Donnerstag',
+      isWeekend: false,
+      notesList: ['Daily']
+    };
+
+    // 'Daily' is already in notesList, so recurring suggestions should only return 'Dev Weekly'
+    const recurring = component.getRecurringSuggestions(day);
+    expect(recurring).toEqual(['Dev Weekly']);
+
+    // Templates suggestion should return available non-added default & recurring notes
+    const templates = component.getAllAvailableTemplateSuggestions(day);
+    expect(templates).toContain('Code Review');
+    expect(templates).toContain('Dev Weekly');
+    expect(templates).toContain('SP Weekly');
+    expect(templates).not.toContain('Daily');
+  });
 });

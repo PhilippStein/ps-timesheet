@@ -31,6 +31,10 @@ describe('ProjectDialogComponent', () => {
     component.basePath = '/tmp/test';
     component.template = 'PersonDays';
     component.defaultTasks = ['Task 1', 'Task 2'];
+    component.defaultNotes = ['Daily', 'Code Review'];
+    component.recurringNotes = [
+      { text: 'SP Weekly', days: ['Mittwoch'] }
+    ];
 
     expect(component.isValid()).toBe(true);
 
@@ -40,7 +44,25 @@ describe('ProjectDialogComponent', () => {
       name: 'Test Project',
       basePath: '/tmp/test',
       template: 'PersonDays',
-      defaultTasks: ['Task 1', 'Task 2']
+      defaultTasks: ['Task 1', 'Task 2'],
+      defaultNotes: ['Daily', 'Code Review'],
+      recurringNotes: [{ text: 'SP Weekly', days: ['Mittwoch'] }]
     });
+  });
+
+  it('should allow adding and removing default notes and recurring notes', () => {
+    component.template = 'PersonDays';
+    component.defaultNotes = ['Daily'];
+    component.addDefaultNote();
+    expect(component.defaultNotes.length).toBe(2);
+    component.removeDefaultNote(0);
+    expect(component.defaultNotes.length).toBe(1);
+
+    component.recurringNotes = [];
+    component.addRecurringNote();
+    expect(component.recurringNotes.length).toBe(1);
+    expect(component.recurringNotes[0].days).toEqual(['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag']);
+    component.removeRecurringNote(0);
+    expect(component.recurringNotes.length).toBe(0);
   });
 });

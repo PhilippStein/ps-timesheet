@@ -15,6 +15,8 @@ public class ProjectConfig {
     private String basePath;
     private String template; // "WorkHours" or "PersonDays"
     private List<String> defaultTasks = new ArrayList<>();
+    private List<String> defaultNotes = new ArrayList<>();
+    private List<RecurringNoteConfig> recurringNotes = new ArrayList<>();
 
     public ProjectConfig() {
     }
@@ -25,6 +27,21 @@ public class ProjectConfig {
         this.template = normalizeTemplate(template);
         if (defaultTasks != null) {
             this.defaultTasks = new ArrayList<>(defaultTasks);
+        }
+    }
+
+    public ProjectConfig(String name, String basePath, String template, List<String> defaultTasks, List<String> defaultNotes, List<RecurringNoteConfig> recurringNotes) {
+        this.name = name;
+        this.basePath = basePath;
+        this.template = normalizeTemplate(template);
+        if (defaultTasks != null) {
+            this.defaultTasks = new ArrayList<>(defaultTasks);
+        }
+        if (defaultNotes != null) {
+            this.defaultNotes = new ArrayList<>(defaultNotes);
+        }
+        if (recurringNotes != null) {
+            this.recurringNotes = new ArrayList<>(recurringNotes);
         }
     }
 
@@ -71,6 +88,22 @@ public class ProjectConfig {
 
     public void setDefaultTasks(List<String> defaultTasks) {
         this.defaultTasks = defaultTasks != null ? new ArrayList<>(defaultTasks) : new ArrayList<>();
+    }
+
+    public List<String> getDefaultNotes() {
+        return defaultNotes;
+    }
+
+    public void setDefaultNotes(List<String> defaultNotes) {
+        this.defaultNotes = defaultNotes != null ? new ArrayList<>(defaultNotes) : new ArrayList<>();
+    }
+
+    public List<RecurringNoteConfig> getRecurringNotes() {
+        return recurringNotes;
+    }
+
+    public void setRecurringNotes(List<RecurringNoteConfig> recurringNotes) {
+        this.recurringNotes = recurringNotes != null ? new ArrayList<>(recurringNotes) : new ArrayList<>();
     }
 
     @Override

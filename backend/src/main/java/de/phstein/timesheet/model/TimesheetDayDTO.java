@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,6 +34,7 @@ public class TimesheetDayDTO {
     // PersonDays fields
     private Map<String, Double> taskAllocations = new HashMap<>(); // taskName -> PT
     private String notes; // Multiline bulletpoints
+    private List<String> notesList = new ArrayList<>();
     private Double totalPt; // Computed on the fly
 
     public TimesheetDayDTO() {
@@ -126,11 +129,61 @@ public class TimesheetDayDTO {
     }
 
     public String getNotes() {
+        if ((notes == null || notes.isBlank()) && notesList != null && !notesList.isEmpty()) {
+            return formatNotesList(notesList);
+        }
         return notes;
     }
 
     public void setNotes(String notes) {
         this.notes = notes;
+        this.notesList = parseNotesToList(notes);
+    }
+
+    public List<String> getNotesList() {
+        if ((notesList == null || notesList.isEmpty()) && notes != null && !notes.isBlank()) {
+            notesList = parseNotesToList(notes);
+        }
+        return notesList != null ? notesList : new ArrayList<>();
+    }
+
+    public void setNotesList(List<String> notesList) {
+        this.notesList = notesList != null ? new ArrayList<>(notesList) : new ArrayList<>();
+        this.notes = formatNotesList(this.notesList);
+    }
+
+    public static List<String> parseNotesToList(String notes) {
+        List<String> list = new ArrayList<>();
+        if (notes == null || notes.isBlank()) {
+            return list;
+        }
+        String[] lines = notes.split("\\r?\\n");
+        for (String line : lines) {
+            if (line == null) continue;
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+            trimmed = trimmed.replaceFirst("^[\\-\\*\u2022\\+]\\s*", "").trim();
+            if (!trimmed.isEmpty()) {
+                list.add(trimmed);
+            }
+        }
+        return list;
+    }
+
+    public static String formatNotesList(List<String> notesList) {
+        if (notesList == null || notesList.isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String item : notesList) {
+            if (item != null && !item.isBlank()) {
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append("- ").append(item.trim());
+            }
+        }
+        return sb.length() > 0 ? sb.toString() : null;
     }
 
     public Double getTotalPt() {

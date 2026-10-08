@@ -16,6 +16,7 @@ export interface TimesheetDay {
   netHours?: number | null;
   taskAllocations?: Record<string, number>;
   notes?: string | null;
+  notesList?: string[];
   totalPt?: number | null;
 }
 

@@ -1,4 +1,4 @@
-import { Component, Directive, ElementRef, HostListener, Input, AfterViewInit, inject } from '@angular/core';
+import { Component, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
@@ -8,50 +8,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { DayStatus, TimesheetDay } from '../../models/timesheet.model';
 import { DateUtils } from '../../utils/date-utils';
 import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-dialog.component';
-
-@Directive({
-  selector: 'textarea[appAutoresize]',
-  standalone: true
-})
-export class AutoresizeDirective implements AfterViewInit {
-  private readonly el = inject(ElementRef<HTMLTextAreaElement>);
-
-  @Input('appAutoresize') set value(val: any) {
-    this.scheduleResize();
-  }
-
-  @HostListener('input')
-  onInput() {
-    this.resize();
-  }
-
-  ngAfterViewInit() {
-    this.scheduleResize();
-  }
-
-  private scheduleResize() {
-    requestAnimationFrame(() => this.resize());
-    setTimeout(() => this.resize(), 0);
-  }
-
-  resize() {
-    const textarea = this.el?.nativeElement;
-    if (!textarea) return;
-
-    textarea.style.height = '0px';
-
-    const computed = window.getComputedStyle(textarea);
-    const borderBottom = parseFloat(computed.borderBottomWidth) || 0;
-    const borderTop = parseFloat(computed.borderTopWidth) || 0;
-
-    const targetHeight = Math.ceil(textarea.scrollHeight + borderTop + borderBottom);
-    textarea.style.height = `${Math.max(30, targetHeight)}px`;
-  }
-}
 
 @Component({
   selector: 'app-person-days-editor',
@@ -66,7 +27,7 @@ export class AutoresizeDirective implements AfterViewInit {
     MatIconModule,
     MatTooltipModule,
     MatDialogModule,
-    AutoresizeDirective
+    MatMenuModule
   ],
   template: `
     <div class="editor-container" (keydown)="handleGlobalKeydown($event)">
@@ -158,18 +119,64 @@ export class AutoresizeDirective implements AfterViewInit {
                   </td>
                 }
 
-                <!-- INLINE EXPANDING DAILY NOTES -->
+                <!-- ADDITIVE DAILY NOTES CHIPS & TEMPLATES -->
                 <td class="col-notes">
-                  <textarea
-                    [appAutoresize]="day.notes"
-                    rows="1"
-                    class="notes-textarea"
-                    [id]="'input-' + rowIndex + '-notes'"
-                    [attr.data-row]="rowIndex"
-                    [(ngModel)]="day.notes"
-                    (blur)="triggerUpdate()"
-                    (keydown)="handleNotesKeydown($event, day, rowIndex)"
-                    placeholder="- Tagesaktivität erfassen..."></textarea>
+                  <div class="notes-cell-container">
+                    @for (note of getNotesList(day); track $index) {
+                      <span class="note-chip">
+                        <span class="note-chip-text">{{ note }}</span>
+                        <button
+                          type="button"
+                          class="note-chip-remove"
+                          (click)="removeNote(day, $index)"
+                          title="Notiz entfernen"
+                          aria-label="Notiz entfernen">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      </span>
+                    }
+
+                    @for (suggestion of getRecurringSuggestions(day); track suggestion) {
+                      <button
+                        type="button"
+                        class="note-suggestion-btn"
+                        (click)="addNote(day, suggestion)"
+                        [title]="'+ ' + suggestion + ' hinzufügen'">
+                        <mat-icon>add</mat-icon> {{ suggestion }}
+                      </button>
+                    }
+
+                    <div class="notes-input-wrapper">
+                      <input
+                        #noteInput
+                        type="text"
+                        class="notes-inline-input"
+                        [id]="'input-' + rowIndex + '-notes'"
+                        [attr.data-row]="rowIndex"
+                        placeholder="+ Notiz (Enter)..."
+                        (keydown)="handleNotesInputKeydown($event, day, rowIndex, noteInput)"
+                        (blur)="handleNotesInputBlur(day, noteInput)">
+
+                      @if (getAllAvailableTemplateSuggestions(day).length > 0) {
+                        <button
+                          type="button"
+                          mat-icon-button
+                          class="notes-menu-btn"
+                          [matMenuTriggerFor]="notesMenu"
+                          title="Vorlagen">
+                          <mat-icon>playlist_add</mat-icon>
+                        </button>
+                        <mat-menu #notesMenu="matMenu" class="notes-templates-menu">
+                          @for (templateNote of getAllAvailableTemplateSuggestions(day); track templateNote) {
+                            <button mat-menu-item (click)="addNote(day, templateNote)">
+                              <mat-icon>add_circle_outline</mat-icon>
+                              <span>{{ templateNote }}</span>
+                            </button>
+                          }
+                        </mat-menu>
+                      }
+                    </div>
+                  </div>
                 </td>
 
                 <td class="col-actions">
@@ -492,21 +499,111 @@ export class AutoresizeDirective implements AfterViewInit {
       text-align: center;
     }
 
-    .notes-textarea {
-      display: block;
-      width: 100%;
-      min-height: 30px;
-      padding: 4px 8px;
-      border: 1px solid transparent;
+    .notes-cell-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      min-height: 28px;
+      padding: 2px 0;
+    }
+
+    .note-chip {
+      display: inline-flex;
+      align-items: center;
+      background: #e7f5ff;
+      color: #1971c2;
+      border: 1px solid #a5d8ff;
       border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.2;
+      padding: 2px 6px;
+      gap: 4px;
+      max-width: 100%;
+    }
+
+    .note-chip-text {
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .note-chip-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: transparent;
-      font-size: 13px;
-      font-family: inherit;
-      line-height: 20px;
-      resize: none;
-      box-sizing: border-box;
-      overflow: hidden;
-      transition: border-color 0.15s, background-color 0.15s;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      color: #1971c2;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+
+      mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+        line-height: 12px;
+      }
+
+      &:hover {
+        background: #d0ebff;
+        color: #e03131;
+      }
+    }
+
+    .note-suggestion-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: #f1f3f5;
+      color: #495057;
+      border: 1px dashed #ced4da;
+      border-radius: 4px;
+      font-size: 11px;
+      padding: 2px 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      mat-icon {
+        font-size: 12px;
+        width: 12px;
+        height: 12px;
+        line-height: 12px;
+        color: #228be6;
+      }
+
+      &:hover {
+        background: #e7f5ff;
+        border-color: #74c0fc;
+        color: #1971c2;
+      }
+    }
+
+    .notes-input-wrapper {
+      display: inline-flex;
+      align-items: center;
+      flex: 1;
+      min-width: 120px;
+      position: relative;
+    }
+
+    .notes-inline-input {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      font-size: 12px;
+      padding: 2px 4px;
+      outline: none;
+      color: #212529;
+
+      &::placeholder {
+        color: #adb5bd;
+        font-style: italic;
+      }
 
       &:hover {
         border-color: #ced4da;
@@ -514,10 +611,37 @@ export class AutoresizeDirective implements AfterViewInit {
       }
 
       &:focus {
-        outline: none;
-        border-color: #d9480f;
+        border-color: #4dabf7;
         background: #ffffff;
-        box-shadow: 0 0 0 2px rgba(217, 72, 15, 0.2);
+        box-shadow: 0 0 0 1px #4dabf7;
+      }
+    }
+
+    .notes-menu-btn {
+      &.mat-mdc-icon-button {
+        --mdc-icon-button-state-layer-size: 20px;
+        --mdc-icon-button-icon-size: 14px;
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px !important;
+        min-height: 20px !important;
+        padding: 0 !important;
+        line-height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #868e96;
+      }
+
+      mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        line-height: 14px;
+      }
+
+      &:hover {
+        color: #1971c2;
       }
     }
 
@@ -612,7 +736,7 @@ export class PersonDaysEditorComponent {
 
   countLoggedDays(): number {
     const days = this.state.activeMonthData()?.days || [];
-    return days.filter(d => !this.isWeekend(d) && !this.isVacationOrSick(d) && ((d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0))).length;
+    return days.filter(d => !this.isWeekend(d) && !this.isVacationOrSick(d) && ((d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0) || (d.notesList && d.notesList.length > 0))).length;
   }
 
   countTotalWorkDays(): number {
@@ -650,6 +774,126 @@ export class PersonDaysEditorComponent {
     });
   }
 
+  getNotesList(day: TimesheetDay): string[] {
+    if (day.notesList && Array.isArray(day.notesList)) {
+      return day.notesList;
+    }
+    if (day.notes) {
+      day.notesList = this.parseNotes(day.notes);
+      return day.notesList;
+    }
+    day.notesList = [];
+    return day.notesList;
+  }
+
+  parseNotes(notes: string | null | undefined): string[] {
+    if (!notes) return [];
+    return notes
+      .split(/\r?\n/)
+      .map(line => line.replace(/^[\-\*\u2022\+]\s*/, '').trim())
+      .filter(line => line.length > 0);
+  }
+
+  formatNotes(notesList: string[]): string | null {
+    if (!notesList || notesList.length === 0) return null;
+    const formatted = notesList
+      .map(n => n.trim())
+      .filter(n => n.length > 0)
+      .map(n => `- ${n}`)
+      .join('\n');
+    return formatted.length > 0 ? formatted : null;
+  }
+
+  addNote(day: TimesheetDay, text: string, inputEl?: HTMLInputElement) {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return;
+    const list = [...this.getNotesList(day), trimmed];
+    day.notesList = list;
+    day.notes = this.formatNotes(list);
+    if (inputEl) {
+      inputEl.value = '';
+    }
+    this.triggerUpdate();
+  }
+
+  removeNote(day: TimesheetDay, index: number) {
+    const list = [...this.getNotesList(day)];
+    if (index >= 0 && index < list.length) {
+      list.splice(index, 1);
+      day.notesList = list;
+      day.notes = this.formatNotes(list);
+      this.triggerUpdate();
+    }
+  }
+
+  getRecurringSuggestions(day: TimesheetDay): string[] {
+    const project = this.state.selectedProject();
+    if (!project?.recurringNotes) return [];
+    const currentNotes = this.getNotesList(day);
+    const dayName = (day.dayOfWeek || '').toLowerCase();
+    return project.recurringNotes
+      .filter(r => r.text && r.days && r.days.some(d => d.toLowerCase() === dayName))
+      .map(r => r.text.trim())
+      .filter(text => text.length > 0 && !currentNotes.includes(text));
+  }
+
+  getAllAvailableTemplateSuggestions(day: TimesheetDay): string[] {
+    const project = this.state.selectedProject();
+    if (!project) return [];
+    const currentNotes = this.getNotesList(day);
+    const result: string[] = [];
+
+    if (project.defaultNotes) {
+      for (const n of project.defaultNotes) {
+        const trimmed = n.trim();
+        if (trimmed && !currentNotes.includes(trimmed) && !result.includes(trimmed)) {
+          result.push(trimmed);
+        }
+      }
+    }
+
+    if (project.recurringNotes) {
+      for (const r of project.recurringNotes) {
+        const trimmed = r.text?.trim();
+        if (trimmed && !currentNotes.includes(trimmed) && !result.includes(trimmed)) {
+          result.push(trimmed);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  handleNotesInputKeydown(event: KeyboardEvent, day: TimesheetDay, rowIndex: number, inputEl: HTMLInputElement) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      const val = inputEl.value.trim();
+      if (val) {
+        this.addNote(day, val, inputEl);
+      } else {
+        const nextRow = this.getNextVisibleRowIndex(rowIndex);
+        if (nextRow >= 0) {
+          const nextInput = document.getElementById(`input-${nextRow}-notes`) as HTMLInputElement;
+          if (nextInput) {
+            nextInput.focus();
+          }
+        }
+      }
+    } else if (event.key === 'Tab' && !event.shiftKey) {
+      const val = inputEl.value.trim();
+      if (val) {
+        this.addNote(day, val, inputEl);
+      }
+    }
+  }
+
+  handleNotesInputBlur(day: TimesheetDay, inputEl: HTMLInputElement) {
+    const val = inputEl.value.trim();
+    if (val) {
+      this.addNote(day, val, inputEl);
+    }
+  }
+
   isRowHidden(day: TimesheetDay): boolean {
     if (!this.state.hideEmptyWeekends()) {
       return false;
@@ -660,7 +904,7 @@ export class PersonDaysEditorComponent {
     }
     const hasPt = day.totalPt != null && day.totalPt > 0;
     const hasAllocations = day.taskAllocations && Object.values(day.taskAllocations).some(v => v != null && !isNaN(v) && v > 0);
-    const hasNotes = day.notes && day.notes.trim().length > 0;
+    const hasNotes = (day.notes && day.notes.trim().length > 0) || (day.notesList && day.notesList.length > 0);
     const hasStatus = !!day.status && String(day.status).trim().length > 0;
     return !hasPt && !hasAllocations && !hasNotes && !hasStatus;
   }
@@ -720,6 +964,7 @@ export class PersonDaysEditorComponent {
       day.status = null;
       day.taskAllocations = {};
       day.notes = null;
+      day.notesList = [];
       day.totalPt = 0.0;
     });
   }
@@ -765,52 +1010,6 @@ export class PersonDaysEditorComponent {
         const nextInput = document.querySelector(`[data-row="${nextRow}"][data-col="${colIndex}"]`) as HTMLElement;
         if (nextInput) {
           nextInput.focus();
-        }
-      }
-    }
-  }
-
-  handleNotesKeydown(event: KeyboardEvent, day: TimesheetDay, rowIndex: number) {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-      event.preventDefault();
-      // Commit and jump to next visible row notes or next day
-      const nextRow = this.getNextVisibleRowIndex(rowIndex);
-      if (nextRow >= 0) {
-        const nextNotes = document.getElementById(`input-${nextRow}-notes`);
-        if (nextNotes) {
-          nextNotes.focus();
-        }
-      }
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      // Smart bullet list support
-      const textarea = event.target as HTMLTextAreaElement;
-      const cursorPos = textarea.selectionStart;
-      const textBefore = textarea.value.substring(0, cursorPos);
-      const textAfter = textarea.value.substring(cursorPos);
-
-      const currentLine = textBefore.split('\n').pop() || '';
-      if (currentLine.trim().startsWith('- ') || currentLine.trim().startsWith('* ')) {
-        const bullet = currentLine.trim().startsWith('- ') ? '- ' : '* ';
-        if (currentLine.trim() === '-' || currentLine.trim() === '*') {
-          // If empty bullet line, remove it on enter
-          event.preventDefault();
-          const lines = textBefore.split('\n');
-          lines.pop();
-          textarea.value = (lines.length > 0 ? lines.join('\n') + '\n' : '') + textAfter;
-          day.notes = textarea.value;
-          textarea.dispatchEvent(new Event('input'));
-          this.triggerUpdate();
-        } else {
-          event.preventDefault();
-          const newText = textBefore + '\n' + bullet + textAfter;
-          textarea.value = newText;
-          day.notes = newText;
-          textarea.selectionStart = textarea.selectionEnd = cursorPos + 1 + bullet.length;
-          textarea.dispatchEvent(new Event('input'));
-          this.triggerUpdate();
         }
       }
     }

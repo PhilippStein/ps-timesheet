@@ -65,6 +65,7 @@ class CsvPersonDaysHandlerTest {
         assertThat(loadedDay3.getTaskAllocations()).containsEntry("Entwicklung", 0.75);
         assertThat(loadedDay3.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay3.getNotes()).isEqualTo("- Meilenstein 1 erfolgreich abgeschlossen\n- Deployment vorbereitet");
+        assertThat(loadedDay3.getNotesList()).containsExactly("Meilenstein 1 erfolgreich abgeschlossen", "Deployment vorbereitet");
         assertThat(loadedDay3.getStatus()).isNull();
 
         TimesheetDayDTO loadedDay4 = loaded.getDays().get(3);
@@ -72,6 +73,7 @@ class CsvPersonDaysHandlerTest {
         assertThat(loadedDay4.getTaskAllocations()).containsEntry("Review", 0.2);
         assertThat(loadedDay4.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay4.getNotes()).isEqualTo("- Bugfix im Backend");
+        assertThat(loadedDay4.getNotesList()).containsExactly("Bugfix im Backend");
         assertThat(loadedDay4.getStatus()).isEqualTo(DayStatus.KRANK);
     }
 
@@ -96,5 +98,22 @@ class CsvPersonDaysHandlerTest {
         assertThat(reloaded.getDays().get(1).getTaskAllocations()).containsEntry("Dev", 0.5);
         assertThat(reloaded.getDays().get(1).getTaskAllocations()).containsEntry("Ops", 0.5);
         assertThat(reloaded.getTotalPt()).isEqualTo(2.0);
+    }
+
+    @Test
+    void shouldWriteAndReadNotesListDirectly() {
+        Path csvFile = tempDir.resolve("2026_05_Alpha_PersonDays.csv");
+        TimesheetMonthDTO month = handler.createEmptyMonth("Alpha", 2026, 5, List.of("Dev"));
+
+        TimesheetDayDTO day1 = month.getDays().get(0);
+        day1.setTaskAllocations(Map.of("Dev", 1.0));
+        day1.setNotesList(List.of("Daily", "SP Weekly", "Code Review"));
+
+        handler.writeMonth(csvFile, month);
+
+        TimesheetMonthDTO reloaded = handler.readMonth(csvFile, "Alpha", 2026, 5);
+        TimesheetDayDTO reloadedDay1 = reloaded.getDays().get(0);
+        assertThat(reloadedDay1.getNotesList()).containsExactly("Daily", "SP Weekly", "Code Review");
+        assertThat(reloadedDay1.getNotes()).isEqualTo("- Daily\n- SP Weekly\n- Code Review");
     }
 }

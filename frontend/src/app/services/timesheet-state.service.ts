@@ -66,9 +66,7 @@ export class TimesheetStateService {
         this.hideEmptyWeekends.set(cfg.hideEmptyWeekends ?? false);
         this.projects.set(cfg.projects);
         this.isLoading.set(false);
-        if (cfg.projects.length > 0 && !this.selectedProject()) {
-          this.selectProject(cfg.projects[0]);
-        }
+        this.updateSelectedProjectFromList(cfg.projects);
       },
       error: () => {
         this.loadProjects();
@@ -117,15 +115,31 @@ export class TimesheetStateService {
       next: (projs) => {
         this.projects.set(projs);
         this.isLoading.set(false);
-        if (projs.length > 0 && !this.selectedProject()) {
-          this.selectProject(projs[0]);
-        }
+        this.updateSelectedProjectFromList(projs);
       },
       error: (err) => {
         this.isLoading.set(false);
         this.errorMessage.set('Projekte konnten nicht geladen werden.');
       }
     });
+  }
+
+  private updateSelectedProjectFromList(projs: ProjectConfig[]) {
+    if (!projs || projs.length === 0) {
+      this.selectedProject.set(null);
+      return;
+    }
+    const current = this.selectedProject();
+    if (!current) {
+      this.selectProject(projs[0]);
+      return;
+    }
+    const matching = projs.find(p => p.name.toLowerCase() === current.name.toLowerCase());
+    if (matching) {
+      this.selectedProject.set(matching);
+    } else {
+      this.selectProject(projs[0]);
+    }
   }
 
   selectProject(project: ProjectConfig) {
@@ -260,6 +274,7 @@ export class TimesheetStateService {
       // PersonDays template duplication
       target.taskAllocations = source.taskAllocations ? { ...source.taskAllocations } : {};
       target.notes = source.notes;
+      target.notesList = source.notesList ? [...source.notesList] : undefined;
     });
   }
 

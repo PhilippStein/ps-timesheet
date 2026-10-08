@@ -55,6 +55,20 @@ class AppConfigServiceTest {
                     defaultTasks:
                       - Feature
                       - Bugfix
+                    defaultNotes:
+                      - Daily
+                      - Code Review
+                    recurringNotes:
+                      - text: Daily
+                        days:
+                          - Montag
+                          - Dienstag
+                          - Mittwoch
+                          - Donnerstag
+                          - Freitag
+                      - text: SP Weekly
+                        days:
+                          - Mittwoch
                 """;
         Files.writeString(configFile, yamlContent);
         appConfigService.setCustomConfigPathForTesting(configFile);
@@ -67,6 +81,20 @@ class AppConfigServiceTest {
         assertThat(project.getBasePath()).isEqualTo("/tmp/custom");
         assertThat(project.getTemplate()).isEqualTo("PersonDays");
         assertThat(project.getDefaultTasks()).containsExactly("Feature", "Bugfix");
+        assertThat(project.getDefaultNotes()).containsExactly("Daily", "Code Review");
+        assertThat(project.getRecurringNotes()).hasSize(2);
+        assertThat(project.getRecurringNotes().get(0).getText()).isEqualTo("Daily");
+        assertThat(project.getRecurringNotes().get(0).getDays()).containsExactly("Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag");
+        assertThat(project.getRecurringNotes().get(1).getText()).isEqualTo("SP Weekly");
+        assertThat(project.getRecurringNotes().get(1).getDays()).containsExactly("Mittwoch");
+
+        // Verify saving and re-reading preserves recurringNotes and defaultNotes
+        appConfigService.saveConfig(config);
+        AppConfig reloaded = appConfigService.loadConfig();
+        ProjectConfig reloadedProj = reloaded.getProjects().get(0);
+        assertThat(reloadedProj.getDefaultNotes()).containsExactly("Daily", "Code Review");
+        assertThat(reloadedProj.getRecurringNotes()).hasSize(2);
+        assertThat(reloadedProj.getRecurringNotes().get(0).getText()).isEqualTo("Daily");
     }
 
     @Test

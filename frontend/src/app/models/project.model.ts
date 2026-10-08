@@ -1,8 +1,15 @@
+export interface RecurringNoteConfig {
+  text: string;
+  days: string[];
+}
+
 export interface ProjectConfig {
   name: string;
   basePath: string;
   template: 'WorkHours' | 'PersonDays' | string;
   defaultTasks?: string[];
+  defaultNotes?: string[];
+  recurringNotes?: RecurringNoteConfig[];
 }
 
 export interface AppConfigDTO {

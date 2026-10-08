@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatChipsModule } from '@angular/material/chips';
-import { ProjectConfig } from '../../models/project.model';
+import { ProjectConfig, RecurringNoteConfig } from '../../models/project.model';
 
 export interface ProjectDialogData {
   project?: ProjectConfig;
@@ -65,12 +65,12 @@ export interface ProjectDialogData {
         </div>
 
         @if (template === 'PersonDays') {
-          <div class="tasks-section">
+          <div class="config-section">
             <label class="section-label">Standard-Aufgaben (für neue Monate):</label>
-            <div class="tasks-list">
+            <div class="items-list">
               @for (task of defaultTasks; track $index) {
-                <div class="task-row">
-                  <mat-form-field appearance="outline" class="task-input">
+                <div class="item-row">
+                  <mat-form-field appearance="outline" class="item-input">
                     <input matInput [(ngModel)]="defaultTasks[$index]" placeholder="Aufgabenname">
                   </mat-form-field>
                   <button mat-icon-button color="warn" (click)="removeTask($index)" type="button">
@@ -79,8 +79,55 @@ export interface ProjectDialogData {
                 </div>
               }
             </div>
-            <button mat-stroked-button color="primary" (click)="addTask()" type="button" class="add-task-btn">
+            <button mat-stroked-button color="primary" (click)="addTask()" type="button" class="add-btn">
               <mat-icon>add</mat-icon> Aufgabe hinzufügen
+            </button>
+          </div>
+
+          <div class="config-section">
+            <label class="section-label">Standard-Notizen / Vorlagen (Quick-Add):</label>
+            <div class="items-list">
+              @for (note of defaultNotes; track $index) {
+                <div class="item-row">
+                  <mat-form-field appearance="outline" class="item-input">
+                    <input matInput [(ngModel)]="defaultNotes[$index]" placeholder="z.B. Daily, Code Review, Release">
+                  </mat-form-field>
+                  <button mat-icon-button color="warn" (click)="removeDefaultNote($index)" type="button">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <button mat-stroked-button color="primary" (click)="addDefaultNote()" type="button" class="add-btn">
+              <mat-icon>add</mat-icon> Vorlage hinzufügen
+            </button>
+          </div>
+
+          <div class="config-section">
+            <label class="section-label">Wiederkehrende Notizen (nach Wochentag):</label>
+            <div class="items-list">
+              @for (recurring of recurringNotes; track $index) {
+                <div class="recurring-row">
+                  <mat-form-field appearance="outline" class="recurring-text-input">
+                    <mat-label>Notiz-Text</mat-label>
+                    <input matInput [(ngModel)]="recurring.text" placeholder="z.B. SP Weekly, Daily">
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="recurring-days-select">
+                    <mat-label>Wochentage</mat-label>
+                    <mat-select [(ngModel)]="recurring.days" multiple>
+                      @for (day of availableWeekdays; track day) {
+                        <mat-option [value]="day">{{ day }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  <button mat-icon-button color="warn" (click)="removeRecurringNote($index)" type="button" class="recurring-delete-btn">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+            <button mat-stroked-button color="primary" (click)="addRecurringNote()" type="button" class="add-btn">
+              <mat-icon>add</mat-icon> Wiederkehrende Notiz hinzufügen
             </button>
           </div>
         }
@@ -93,8 +140,9 @@ export interface ProjectDialogData {
   `,
   styles: [`
     .dialog-content {
-      min-width: 480px;
-      max-width: 600px;
+      min-width: 520px;
+      max-width: 650px;
+      max-height: 80vh;
     }
     .form-container {
       display: flex;
@@ -121,23 +169,48 @@ export interface ProjectDialogData {
       flex-direction: column;
       margin-left: 8px;
     }
-    .tasks-section {
-      background: #f1f3f5;
+    .config-section {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
       padding: 12px;
       border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-    .task-row {
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .item-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 8px;
     }
-    .task-input {
+    .item-input {
       flex: 1;
       margin-bottom: -16px;
     }
-    .add-task-btn {
-      margin-top: 8px;
+    .recurring-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .recurring-text-input {
+      flex: 1.2;
+      margin-bottom: -16px;
+    }
+    .recurring-days-select {
+      flex: 1.3;
+      margin-bottom: -16px;
+    }
+    .recurring-delete-btn {
+      align-self: center;
+    }
+    .add-btn {
+      align-self: flex-start;
+      margin-top: 6px;
     }
   `]
 })
@@ -145,10 +218,24 @@ export class ProjectDialogComponent {
   private readonly dialogRef = inject(MatDialogRef<ProjectDialogComponent>);
   readonly data: ProjectDialogData = inject(MAT_DIALOG_DATA);
 
+  readonly availableWeekdays = [
+    'Montag',
+    'Dienstag',
+    'Mittwoch',
+    'Donnerstag',
+    'Freitag',
+    'Samstag',
+    'Sonntag'
+  ];
+
   name = this.data.project?.name ?? '';
   basePath = this.data.project?.basePath ?? '';
   template = this.data.project?.template ?? 'WorkHours';
   defaultTasks: string[] = this.data.project?.defaultTasks ? [...this.data.project.defaultTasks] : ['Konzeption', 'Entwicklung', 'Review & Test'];
+  defaultNotes: string[] = this.data.project?.defaultNotes ? [...this.data.project.defaultNotes] : [];
+  recurringNotes: RecurringNoteConfig[] = this.data.project?.recurringNotes
+    ? this.data.project.recurringNotes.map(r => ({ text: r.text, days: [...(r.days || [])] }))
+    : [];
 
   addTask() {
     this.defaultTasks.push(`Aufgabe ${this.defaultTasks.length + 1}`);
@@ -156,6 +243,25 @@ export class ProjectDialogComponent {
 
   removeTask(index: number) {
     this.defaultTasks.splice(index, 1);
+  }
+
+  addDefaultNote() {
+    this.defaultNotes.push('');
+  }
+
+  removeDefaultNote(index: number) {
+    this.defaultNotes.splice(index, 1);
+  }
+
+  addRecurringNote() {
+    this.recurringNotes.push({
+      text: '',
+      days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag']
+    });
+  }
+
+  removeRecurringNote(index: number) {
+    this.recurringNotes.splice(index, 1);
   }
 
   isValid(): boolean {
@@ -167,11 +273,23 @@ export class ProjectDialogComponent {
       ? this.defaultTasks.map(t => t.trim()).filter(t => t.length > 0)
       : [];
 
+    const cleanDefaultNotes = this.template === 'PersonDays'
+      ? this.defaultNotes.map(n => n.trim()).filter(n => n.length > 0)
+      : [];
+
+    const cleanRecurringNotes = this.template === 'PersonDays'
+      ? this.recurringNotes
+          .map(r => ({ text: r.text.trim(), days: r.days || [] }))
+          .filter(r => r.text.length > 0 && r.days.length > 0)
+      : [];
+
     const result: ProjectConfig = {
       name: this.name.trim(),
       basePath: this.basePath.trim(),
       template: this.template,
-      defaultTasks: cleanTasks
+      defaultTasks: cleanTasks,
+      defaultNotes: cleanDefaultNotes,
+      recurringNotes: cleanRecurringNotes
     };
 
     this.dialogRef.close(result);

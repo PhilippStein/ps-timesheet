@@ -402,7 +402,7 @@ export class TimesheetNavigationComponent {
       if (res) {
         this.api.saveProject(res).subscribe({
           next: () => {
-            this.state.loadProjects();
+            this.state.loadConfig();
             this.state.selectProject(res);
           }
         });
@@ -419,8 +419,13 @@ export class TimesheetNavigationComponent {
     dialogRef.afterClosed().subscribe((res: ProjectConfig | undefined) => {
       if (res) {
         this.api.saveProject(res).subscribe({
-          next: () => {
-            this.state.loadProjects();
+          next: (savedProject) => {
+            const updated = savedProject || res;
+            const current = this.state.selectedProject();
+            if (current && (current.name.toLowerCase() === project.name.toLowerCase() || current.name.toLowerCase() === res.name.toLowerCase())) {
+              this.state.selectedProject.set(updated);
+            }
+            this.state.loadConfig();
           }
         });
       }
