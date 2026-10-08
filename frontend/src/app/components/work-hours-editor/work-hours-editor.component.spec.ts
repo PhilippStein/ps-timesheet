@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { WorkHoursEditorComponent } from './work-hours-editor.component';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
+import { DayStatus } from '../../models/timesheet.model';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -67,6 +68,31 @@ describe('WorkHoursEditorComponent', () => {
 
     expect(component.countTotalWorkDays()).toBe(2);
     expect(component.countWorkedDays()).toBe(1);
+  });
+
+  it('should exclude vacation and sick days from work days count while keeping hours in total', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, netHours: 8, status: null },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, netHours: 4, status: DayStatus.URLAUB },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 0, status: null },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0, status: null },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, netHours: 0, status: DayStatus.KRANK },
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, netHours: 7.5, status: null }
+      ]
+    });
+
+    // 4 weekdays: 1 vacation, 1 sick => 2 regular work days
+    expect(component.countTotalWorkDays()).toBe(2);
+    // 2 regular work days: 10-01 has 8h, 10-06 has 7.5h => 2 worked workdays
+    expect(component.countWorkedDays()).toBe(2);
+    expect(component.isVacation(stateService.activeMonthData()!.days[1])).toBe(true);
+    expect(component.isSick(stateService.activeMonthData()!.days[4])).toBe(true);
   });
 
   it('should identify empty weekend rows and hide them when setting is enabled', () => {

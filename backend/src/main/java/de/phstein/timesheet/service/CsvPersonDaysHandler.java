@@ -1,5 +1,6 @@
 package de.phstein.timesheet.service;
 
+import de.phstein.timesheet.model.DayStatus;
 import de.phstein.timesheet.model.TimesheetDayDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -83,7 +84,8 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                             !"DayOfWeek".equalsIgnoreCase(h) &&
                             !"Notes".equalsIgnoreCase(h) &&
                             !"Total_PT".equalsIgnoreCase(h) &&
-                            !"Comment".equalsIgnoreCase(h)) {
+                            !"Comment".equalsIgnoreCase(h) &&
+                            !"Status".equalsIgnoreCase(h)) {
                         dynamicTaskColumns.add(h);
                     }
                 }
@@ -122,6 +124,9 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                     String notes = getRecordValue(record, headerMap, "Notes", record.size() - 1);
                     dayDTO.setNotes(nullIfBlank(notes));
 
+                    String status = getRecordValue(record, headerMap, "Status", -1);
+                    dayDTO.setStatus(DayStatus.fromValue(status));
+
                     calculateDayPT(dayDTO);
                 }
             } catch (IOException e) {
@@ -156,6 +161,7 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                 headers.add("DayOfWeek");
                 headers.addAll(taskColumns);
                 headers.add("Notes");
+                headers.add("Status");
 
                 printer.printRecord(headers);
 
@@ -171,6 +177,7 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
                     }
 
                     row.add(day.getNotes() != null ? day.getNotes() : "");
+                    row.add(day.getStatus() != null ? day.getStatus().getValue() : "");
                     printer.printRecord(row);
                 }
                 printer.flush();

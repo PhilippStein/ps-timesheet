@@ -19,6 +19,9 @@ public class TimesheetDayDTO {
     @JsonAlias({"weekend", "isWeekend"})
     private boolean isWeekend;
 
+    @JsonProperty("status")
+    private DayStatus status; // e.g. URLAUB, KRANK
+
     // WorkHours fields
     private String startTime; // "HH:mm"
     private String endTime; // "HH:mm"
@@ -64,6 +67,14 @@ public class TimesheetDayDTO {
     @JsonProperty("isWeekend")
     public void setWeekend(boolean weekend) {
         isWeekend = weekend;
+    }
+
+    public DayStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DayStatus status) {
+        this.status = status;
     }
 
     public String getStartTime() {

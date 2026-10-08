@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
-import { TimesheetDay } from '../../models/timesheet.model';
+import { DayStatus, TimesheetDay } from '../../models/timesheet.model';
 import { DateUtils } from '../../utils/date-utils';
 import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-dialog.component';
 
@@ -97,6 +97,7 @@ export class AutoresizeDirective implements AfterViewInit {
           <thead>
             <tr>
               <th class="col-date">Datum</th>
+              <th class="col-status">Status</th>
               @for (task of state.activeMonthData()?.taskColumns; track task; let taskIndex = $index) {
                 <th class="col-task font-mono" [matTooltip]="task">
                   <span class="task-header-text">{{ task }}</span>
@@ -109,6 +110,8 @@ export class AutoresizeDirective implements AfterViewInit {
           <tbody>
             @for (day of state.activeMonthData()?.days; track day.date; let rowIndex = $index) {
               <tr [class.weekend-row]="day.isWeekend || day.weekend"
+                  [class.vacation-row]="isVacation(day)"
+                  [class.sick-row]="isSick(day)"
                   [class.has-hours]="day.totalPt && day.totalPt > 0"
                   [class.hidden-weekend]="isRowHidden(day)"
                   [class.week-separator]="isWeekSeparator(rowIndex)">
@@ -117,6 +120,22 @@ export class AutoresizeDirective implements AfterViewInit {
                     <span class="day-badge" [class.weekend-badge]="day.isWeekend || day.weekend">{{ day.dayOfWeek }}</span>
                     <span class="date-text font-mono">{{ day.date }}</span>
                   </div>
+                </td>
+                <td class="col-status">
+                  <select
+                    class="cell-select status-select"
+                    [class.status-vacation]="isVacation(day)"
+                    [class.status-sick]="isSick(day)"
+                    [id]="'input-' + rowIndex + '-status'"
+                    [attr.data-row]="rowIndex"
+                    [attr.data-col]="1"
+                    [ngModel]="day.status || ''"
+                    (ngModelChange)="setStatus(day, $event)"
+                    (keydown)="handleCellKeydown($event, rowIndex, 1)">
+                    <option value="">Regulär</option>
+                    <option [value]="DayStatus.URLAUB">Urlaub</option>
+                    <option [value]="DayStatus.KRANK">Krank</option>
+                  </select>
                 </td>
 
                 <!-- DYNAMIC TASK COLUMNS -->
@@ -130,11 +149,11 @@ export class AutoresizeDirective implements AfterViewInit {
                       class="cell-input pt-input font-mono"
                       [id]="'input-' + rowIndex + '-task-' + taskIndex"
                       [attr.data-row]="rowIndex"
-                      [attr.data-col]="taskIndex + 1"
+                      [attr.data-col]="taskIndex + 2"
                       [ngModel]="getTaskPt(day, task)"
                       (ngModelChange)="setTaskPt(day, task, $event)"
                       (blur)="triggerUpdate()"
-                      (keydown)="handleCellKeydown($event, rowIndex, taskIndex + 1)"
+                      (keydown)="handleCellKeydown($event, rowIndex, taskIndex + 2)"
                       placeholder="0.0">
                   </td>
                 }
@@ -179,7 +198,7 @@ export class AutoresizeDirective implements AfterViewInit {
           </tbody>
           <tfoot>
             <tr class="totals-row">
-              <td class="total-label">Summen:</td>
+              <td colspan="2" class="total-label">Summen:</td>
               @for (task of state.activeMonthData()?.taskColumns; track task) {
                 <td class="col-task font-mono task-total-cell">
                   {{ formatPt(state.activeMonthData()?.taskTotals?.[task]) }}
@@ -341,6 +360,7 @@ export class AutoresizeDirective implements AfterViewInit {
     }
 
     .col-date { width: 110px; }
+    .col-status { width: 95px; }
     .col-task {
       width: 100px;
       min-width: 90px;
@@ -349,6 +369,61 @@ export class AutoresizeDirective implements AfterViewInit {
     }
     .col-notes { width: auto; min-width: 250px; }
     .col-actions { width: 76px; min-width: 76px; text-align: center; padding: 2px 4px !important; }
+
+    .cell-select {
+      width: 100%;
+      height: 30px;
+      padding: 2px 6px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 500;
+      color: #495057;
+      box-sizing: border-box;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+
+      &:hover {
+        border-color: #ced4da;
+        background: #ffffff;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #d9480f;
+        background: #ffffff;
+        box-shadow: 0 0 0 2px rgba(217, 72, 15, 0.2);
+      }
+
+      &.status-vacation {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        font-weight: 600;
+        border-color: #bae6fd;
+      }
+
+      &.status-sick {
+        background-color: #fee2e2;
+        color: #b91c1c;
+        font-weight: 600;
+        border-color: #fecaca;
+      }
+    }
+
+    tr.vacation-row {
+      background-color: #f0f9ff;
+      &:hover {
+        background-color: #e0f2fe;
+      }
+    }
+
+    tr.sick-row {
+      background-color: #fff1f2;
+      &:hover {
+        background-color: #fee2e2;
+      }
+    }
 
     .action-buttons-cell {
       display: inline-flex;
@@ -513,6 +588,7 @@ export class AutoresizeDirective implements AfterViewInit {
 export class PersonDaysEditorComponent {
   readonly state = inject(TimesheetStateService);
   private readonly dialog = inject(MatDialog);
+  readonly DayStatus = DayStatus;
 
   formatPt(pt: number | undefined): string {
     return pt != null ? pt.toFixed(2) : '0.00';
@@ -522,14 +598,31 @@ export class PersonDaysEditorComponent {
     return !!(day.isWeekend || day.weekend || day.dayOfWeek === 'Samstag' || day.dayOfWeek === 'Sonntag' || day.dayOfWeek === 'Saturday' || day.dayOfWeek === 'Sunday');
   }
 
+  isVacation(day: TimesheetDay): boolean {
+    return day.status === DayStatus.URLAUB || day.status === 'Urlaub';
+  }
+
+  isSick(day: TimesheetDay): boolean {
+    return day.status === DayStatus.KRANK || day.status === 'Krank';
+  }
+
+  isVacationOrSick(day: TimesheetDay): boolean {
+    return this.isVacation(day) || this.isSick(day);
+  }
+
   countLoggedDays(): number {
     const days = this.state.activeMonthData()?.days || [];
-    return days.filter(d => !this.isWeekend(d) && ((d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0))).length;
+    return days.filter(d => !this.isWeekend(d) && !this.isVacationOrSick(d) && ((d.totalPt != null && d.totalPt > 0) || (d.notes && d.notes.trim().length > 0))).length;
   }
 
   countTotalWorkDays(): number {
     const days = this.state.activeMonthData()?.days || [];
-    return days.filter(d => !this.isWeekend(d)).length;
+    return days.filter(d => !this.isWeekend(d) && !this.isVacationOrSick(d)).length;
+  }
+
+  setStatus(day: TimesheetDay, value: string | DayStatus | null) {
+    day.status = value ? (value as DayStatus) : null;
+    this.triggerUpdate();
   }
 
   getTaskPt(day: TimesheetDay, task: string): number | null {
@@ -568,7 +661,8 @@ export class PersonDaysEditorComponent {
     const hasPt = day.totalPt != null && day.totalPt > 0;
     const hasAllocations = day.taskAllocations && Object.values(day.taskAllocations).some(v => v != null && !isNaN(v) && v > 0);
     const hasNotes = day.notes && day.notes.trim().length > 0;
-    return !hasPt && !hasAllocations && !hasNotes;
+    const hasStatus = !!day.status && String(day.status).trim().length > 0;
+    return !hasPt && !hasAllocations && !hasNotes && !hasStatus;
   }
 
   isWeekSeparator(rowIndex: number): boolean {
@@ -623,6 +717,7 @@ export class PersonDaysEditorComponent {
   clearRow(rowIndex: number) {
     this.state.updateActiveMonthData(month => {
       const day = month.days[rowIndex];
+      day.status = null;
       day.taskAllocations = {};
       day.notes = null;
       day.totalPt = 0.0;

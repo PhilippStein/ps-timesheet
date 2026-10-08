@@ -1,5 +1,6 @@
 package de.phstein.timesheet.service;
 
+import de.phstein.timesheet.model.DayStatus;
 import de.phstein.timesheet.model.TimesheetDayDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -91,6 +92,7 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
                     String endTime = getRecordValue(record, headerMap, "EndTime", 3);
                     String pauseStr = getRecordValue(record, headerMap, "PauseMinutes", 4);
                     String comment = getRecordValue(record, headerMap, "Comment", 5);
+                    String status = getRecordValue(record, headerMap, "Status", 6);
 
                     dayDTO.setStartTime(nullIfBlank(startTime));
                     dayDTO.setEndTime(nullIfBlank(endTime));
@@ -101,6 +103,7 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
                         }
                     }
                     dayDTO.setComment(nullIfBlank(comment));
+                    dayDTO.setStatus(DayStatus.fromValue(status));
 
                     calculateNetHours(dayDTO);
                 }
@@ -125,7 +128,7 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
             try (BufferedWriter writer = Files.newBufferedWriter(csvFile, StandardCharsets.UTF_8);
                  CSVPrinter printer = new CSVPrinter(writer, CSV_FORMAT)) {
 
-                printer.printRecord("Date", "DayOfWeek", "StartTime", "EndTime", "PauseMinutes", "Comment");
+                printer.printRecord("Date", "DayOfWeek", "StartTime", "EndTime", "PauseMinutes", "Comment", "Status");
 
                 for (TimesheetDayDTO day : month.getDays()) {
                     printer.printRecord(
@@ -134,7 +137,8 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
                             day.getStartTime() != null ? day.getStartTime() : "",
                             day.getEndTime() != null ? day.getEndTime() : "",
                             day.getPauseMinutes() != null ? String.valueOf(day.getPauseMinutes()) : "",
-                            day.getComment() != null ? day.getComment() : ""
+                            day.getComment() != null ? day.getComment() : "",
+                            day.getStatus() != null ? day.getStatus().getValue() : ""
                     );
                 }
                 printer.flush();
@@ -188,11 +192,11 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
     private static String getRecordValue(CSVRecord record, Map<String, Integer> headerMap, String headerName, int fallbackIndex) {
         if (headerMap != null && headerMap.containsKey(headerName)) {
             int idx = headerMap.get(headerName);
-            if (idx < record.size()) {
+            if (idx >= 0 && idx < record.size()) {
                 return record.get(idx);
             }
         }
-        if (fallbackIndex < record.size()) {
+        if (fallbackIndex >= 0 && fallbackIndex < record.size()) {
             return record.get(fallbackIndex);
         }
         return null;

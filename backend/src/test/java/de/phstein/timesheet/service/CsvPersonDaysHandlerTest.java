@@ -1,5 +1,6 @@
 package de.phstein.timesheet.service;
 
+import de.phstein.timesheet.model.DayStatus;
 import de.phstein.timesheet.model.TimesheetDayDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,7 @@ class CsvPersonDaysHandlerTest {
         TimesheetDayDTO day4 = month.getDays().get(3); // 2026-03-04
         day4.setTaskAllocations(Map.of("Entwicklung", 0.8, "Review", 0.2));
         day4.setNotes("- Bugfix im Backend");
+        day4.setStatus(DayStatus.KRANK);
 
         handler.writeMonth(csvFile, month);
 
@@ -63,12 +65,14 @@ class CsvPersonDaysHandlerTest {
         assertThat(loadedDay3.getTaskAllocations()).containsEntry("Entwicklung", 0.75);
         assertThat(loadedDay3.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay3.getNotes()).isEqualTo("- Meilenstein 1 erfolgreich abgeschlossen\n- Deployment vorbereitet");
+        assertThat(loadedDay3.getStatus()).isNull();
 
         TimesheetDayDTO loadedDay4 = loaded.getDays().get(3);
         assertThat(loadedDay4.getTaskAllocations()).containsEntry("Entwicklung", 0.8);
         assertThat(loadedDay4.getTaskAllocations()).containsEntry("Review", 0.2);
         assertThat(loadedDay4.getTotalPt()).isEqualTo(1.0);
         assertThat(loadedDay4.getNotes()).isEqualTo("- Bugfix im Backend");
+        assertThat(loadedDay4.getStatus()).isEqualTo(DayStatus.KRANK);
     }
 
     @Test

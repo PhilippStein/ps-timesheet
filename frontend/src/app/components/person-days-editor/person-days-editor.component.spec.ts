@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PersonDaysEditorComponent } from './person-days-editor.component';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
+import { DayStatus } from '../../models/timesheet.model';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -69,6 +70,31 @@ describe('PersonDaysEditorComponent', () => {
 
     expect(component.countTotalWorkDays()).toBe(2);
     expect(component.countLoggedDays()).toBe(1);
+  });
+
+  it('should exclude vacation and sick days from work days count while keeping PT in total', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, totalPt: 1.0, notes: null, status: null },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, totalPt: 0.5, notes: 'Urlaubstag mit Notfall-Einsatz', status: DayStatus.URLAUB },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, totalPt: 0, notes: null, status: null },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, totalPt: 0, notes: null, status: null },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, totalPt: 0, notes: null, status: DayStatus.KRANK },
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, totalPt: 1.0, notes: 'Normaler Tag', status: null }
+      ]
+    });
+
+    // 4 weekdays: 1 vacation, 1 sick => 2 regular work days
+    expect(component.countTotalWorkDays()).toBe(2);
+    // 2 regular work days: 10-01 has 1.0 PT, 10-06 has 1.0 PT => 2 logged work days
+    expect(component.countLoggedDays()).toBe(2);
+    expect(component.isVacation(stateService.activeMonthData()!.days[1])).toBe(true);
+    expect(component.isSick(stateService.activeMonthData()!.days[4])).toBe(true);
   });
 
   it('should identify empty weekend rows and hide them when setting is enabled', () => {

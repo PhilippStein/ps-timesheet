@@ -1,5 +1,6 @@
 package de.phstein.timesheet.service;
 
+import de.phstein.timesheet.model.DayStatus;
 import de.phstein.timesheet.model.TimesheetDayDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,14 +74,15 @@ class CsvWorkHoursHandlerTest {
         day2.setEndTime("17:30");
         day2.setPauseMinutes(45);
         day2.setComment("Implementierung REST API");
+        day2.setStatus(DayStatus.URLAUB);
 
         handler.writeMonth(csvFile, month);
 
         assertThat(Files.exists(csvFile)).isTrue();
         List<String> lines = Files.readAllLines(csvFile);
-        assertThat(lines.get(0)).isEqualTo("Date;DayOfWeek;StartTime;EndTime;PauseMinutes;Comment");
-        assertThat(lines.get(1)).isEqualTo("2026-10-01;Donnerstag;08:30;17:00;30;Architektur & Design");
-        assertThat(lines.get(2)).isEqualTo("2026-10-02;Freitag;09:00;17:30;45;Implementierung REST API");
+        assertThat(lines.get(0)).isEqualTo("Date;DayOfWeek;StartTime;EndTime;PauseMinutes;Comment;Status");
+        assertThat(lines.get(1)).isEqualTo("2026-10-01;Donnerstag;08:30;17:00;30;Architektur & Design;");
+        assertThat(lines.get(2)).isEqualTo("2026-10-02;Freitag;09:00;17:30;45;Implementierung REST API;Urlaub");
 
         // Read back
         TimesheetMonthDTO loaded = handler.readMonth(csvFile, "TestProj", 2026, 10);
@@ -93,5 +95,10 @@ class CsvWorkHoursHandlerTest {
         assertThat(loadedDay1.getPauseMinutes()).isEqualTo(30);
         assertThat(loadedDay1.getNetHours()).isEqualTo(8.0);
         assertThat(loadedDay1.getComment()).isEqualTo("Architektur & Design");
+        assertThat(loadedDay1.getStatus()).isNull();
+
+        TimesheetDayDTO loadedDay2 = loaded.getDays().get(1);
+        assertThat(loadedDay2.getStatus()).isEqualTo(DayStatus.URLAUB);
+        assertThat(loadedDay2.getNetHours()).isEqualTo(7.75);
     }
 }

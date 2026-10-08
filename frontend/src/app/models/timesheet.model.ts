@@ -1,8 +1,14 @@
+export enum DayStatus {
+  URLAUB = 'Urlaub',
+  KRANK = 'Krank'
+}
+
 export interface TimesheetDay {
   date: string;
   dayOfWeek: string;
   isWeekend: boolean;
   weekend?: boolean;
+  status?: DayStatus | string | null;
   startTime?: string | null;
   endTime?: string | null;
   pauseMinutes?: number | null;
