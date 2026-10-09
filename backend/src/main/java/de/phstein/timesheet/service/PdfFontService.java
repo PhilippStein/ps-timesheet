@@ -11,24 +11,16 @@ import java.io.InputStream;
 public class PdfFontService {
 
     private BaseFont baseFontRegular;
-    private BaseFont baseFontBold;
 
     @PostConstruct
     public void init() {
         try {
             byte[] regularBytes = loadResource("/fonts/PTSans-Regular.ttf");
-            byte[] boldBytes = loadResource("/fonts/PTSans-Bold.ttf");
 
             if (regularBytes != null) {
                 this.baseFontRegular = BaseFont.createFont("PTSans-Regular.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, regularBytes, null);
             } else {
                 this.baseFontRegular = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
-            }
-
-            if (boldBytes != null) {
-                this.baseFontBold = BaseFont.createFont("PTSans-Bold.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED, true, boldBytes, null);
-            } else {
-                this.baseFontBold = BaseFont.createFont(BaseFont.HELVETICA_BOLD, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to initialize PDF fonts", e);
@@ -50,10 +42,6 @@ public class PdfFontService {
         return baseFontRegular;
     }
 
-    public BaseFont getBaseFontBold() {
-        return baseFontBold;
-    }
-
     public Font getRegularFont(float size) {
         return new Font(baseFontRegular, size, Font.NORMAL);
     }
@@ -63,7 +51,7 @@ public class PdfFontService {
     }
 
     public Font getBoldFont(float size) {
-        return new Font(baseFontBold, size, Font.BOLD);
+        return new Font(baseFontRegular, size, Font.BOLD);
     }
 
     public Font getBoldFont() {
