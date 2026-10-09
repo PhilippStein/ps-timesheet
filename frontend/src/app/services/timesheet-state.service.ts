@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import { AppConfigDTO, AppConfigUpdateDTO, PdfExportConfig, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
-import { TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
+import { DayStatus, TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
 import { TimesheetApiService } from './timesheet-api.service';
 
 @Injectable({
@@ -308,6 +308,11 @@ export class TimesheetStateService {
   }
 
   private recalculateClientSide(month: TimesheetMonth) {
+    const isWeekend = (d: TimesheetDay) => !!(d.isWeekend || d.weekend || d.dayOfWeek === 'Samstag' || d.dayOfWeek === 'Sonntag' || d.dayOfWeek === 'Saturday' || d.dayOfWeek === 'Sunday');
+    const isVacationOrSick = (d: TimesheetDay) => d.status === DayStatus.URLAUB || d.status === 'Urlaub' || d.status === DayStatus.KRANK || d.status === 'Krank' || d.location === 'Urlaub' || d.location === 'Krank';
+
+    month.workingDays = (month.days || []).filter(d => !isWeekend(d) && !isVacationOrSick(d)).length;
+
     if (this.isWorkHoursTemplate()) {
       let total = 0;
       for (const day of month.days) {

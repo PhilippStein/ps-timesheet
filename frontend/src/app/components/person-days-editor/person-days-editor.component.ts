@@ -793,7 +793,11 @@ export class PersonDaysEditorComponent {
   }
 
   countTotalWorkDays(): number {
-    const days = this.state.activeMonthData()?.days || [];
+    const active = this.state.activeMonthData();
+    if (active?.workingDays != null) {
+      return active.workingDays;
+    }
+    const days = active?.days || [];
     return days.filter(d => !this.isWeekend(d) && !this.isVacationOrSick(d)).length;
   }
 

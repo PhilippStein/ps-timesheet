@@ -234,6 +234,7 @@ public class CsvPersonDaysHandler implements TimesheetTemplateHandler {
 
         month.setTotalPt(Math.round(monthTotal * 100.0) / 100.0);
         month.setTaskTotals(taskTotals);
+        month.setWorkingDays(month.calculateWorkingDays());
     }
 
     private static String getRecordValue(CSVRecord record, Map<String, Integer> headerMap, String headerName, int fallbackIndex) {

@@ -40,4 +40,31 @@ class DayStatusTest {
         TimesheetDayDTO deserializedUpper = objectMapper.readValue(jsonUpper, TimesheetDayDTO.class);
         assertThat(deserializedUpper.getStatus()).isEqualTo(DayStatus.URLAUB);
     }
+
+    @Test
+    void shouldCalculateWorkingDaysExcludingWeekendsAndVacationAndSick() {
+        TimesheetMonthDTO month = new TimesheetMonthDTO();
+
+        TimesheetDayDTO workDay1 = new TimesheetDayDTO("2026-10-01", "Donnerstag", false);
+        TimesheetDayDTO workDay2 = new TimesheetDayDTO("2026-10-02", "Freitag", false);
+        
+        TimesheetDayDTO weekend1 = new TimesheetDayDTO("2026-10-03", "Samstag", true);
+        TimesheetDayDTO weekend2 = new TimesheetDayDTO("2026-10-04", "Sonntag", true);
+
+        TimesheetDayDTO vacationDay = new TimesheetDayDTO("2026-10-05", "Montag", false);
+        vacationDay.setStatus(DayStatus.URLAUB);
+
+        TimesheetDayDTO sickDay = new TimesheetDayDTO("2026-10-06", "Dienstag", false);
+        sickDay.setStatus(DayStatus.KRANK);
+
+        TimesheetDayDTO locationVacationDay = new TimesheetDayDTO("2026-10-07", "Mittwoch", false);
+        locationVacationDay.setLocation("Urlaub");
+
+        TimesheetDayDTO workDay3 = new TimesheetDayDTO("2026-10-08", "Donnerstag", false);
+
+        month.setDays(java.util.List.of(workDay1, workDay2, weekend1, weekend2, vacationDay, sickDay, locationVacationDay, workDay3));
+
+        assertThat(month.calculateWorkingDays()).isEqualTo(3);
+        assertThat(month.getWorkingDays()).isEqualTo(3);
+    }
 }

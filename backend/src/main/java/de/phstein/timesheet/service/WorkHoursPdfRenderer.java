@@ -53,11 +53,11 @@ public class WorkHoursPdfRenderer {
         LocalDate monthEnd = ym.atEndOfMonth();
         String monthEndStr = monthEnd.format(DATE_FORMATTER);
 
-        // Header Row 1: <Monat> | <Jahr> | <Header-Text> (colspan 2) | <Monatsende> (colspan 2)
+        // Header Row 1: <Monat> | <Jahr> | <Header-Text> (colspan 3) | <Monatsende> (colspan 1)
         table.addCell(createCell(monthName, fontBold, Element.ALIGN_LEFT, HEADER_BG_COLOR, 1));
         table.addCell(createCell(yearStr, fontBold, Element.ALIGN_CENTER, HEADER_BG_COLOR, 1));
-        table.addCell(createCell(headerTitle, fontBold, Element.ALIGN_CENTER, HEADER_BG_COLOR, 2));
-        table.addCell(createCell(monthEndStr, fontBold, Element.ALIGN_RIGHT, HEADER_BG_COLOR, 2));
+        table.addCell(createCell(headerTitle, fontBold, Element.ALIGN_CENTER, HEADER_BG_COLOR, 3));
+        table.addCell(createCell(monthEndStr, fontBold, Element.ALIGN_RIGHT, HEADER_BG_COLOR, 1));
 
         // Header Row 2: Datum | Start | Ende | Pause | Summe | Bemerkung
         table.addCell(createCell("Datum", fontBold, Element.ALIGN_LEFT, HEADER_BG_COLOR, 1));
@@ -146,40 +146,32 @@ public class WorkHoursPdfRenderer {
         document.add(table);
 
         // Statistics Summary Table
-        int workingDays = 0;
-        for (int d = 1; d <= ym.lengthOfMonth(); d++) {
-            LocalDate date = ym.atDay(d);
-            if (date.getDayOfWeek() != DayOfWeek.SATURDAY && date.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                workingDays++;
-            }
-        }
+        int workingDays = monthDTO.getWorkingDays() != null ? monthDTO.getWorkingDays() : monthDTO.calculateWorkingDays();
         double targetHours = workingDays * 8.0;
         double diffHours = totalMonthlyNetHours - targetHours;
 
-        Paragraph statHeading = new Paragraph("Statistik:", fontBold);
-        statHeading.setSpacingBefore(12f);
-        statHeading.setSpacingAfter(6f);
-        document.add(statHeading);
+        Font fontStat = pdfFontService.getRegularFont(10f);
 
         PdfPTable statTable = new PdfPTable(2);
         statTable.setHorizontalAlignment(Element.ALIGN_LEFT);
         statTable.setWidthPercentage(45f);
         statTable.setWidths(new float[]{55f, 45f});
+        statTable.setSpacingBefore(10f);
 
-        statTable.addCell(createCell("Arbeitstage", fontRegular, Element.ALIGN_LEFT, null, 1));
-        statTable.addCell(createCell(String.valueOf(workingDays), fontRegular, Element.ALIGN_RIGHT, null, 1));
+        statTable.addCell(createStatCell("Arbeitstage", fontStat, Element.ALIGN_LEFT));
+        statTable.addCell(createStatCell(String.valueOf(workingDays), fontStat, Element.ALIGN_RIGHT));
 
-        statTable.addCell(createCell("Sollstunden", fontRegular, Element.ALIGN_LEFT, null, 1));
-        statTable.addCell(createCell(String.format(Locale.US, "%.2f", targetHours), fontRegular, Element.ALIGN_RIGHT, null, 1));
+        statTable.addCell(createStatCell("Sollstunden", fontStat, Element.ALIGN_LEFT));
+        statTable.addCell(createStatCell(String.format(Locale.US, "%.2f", targetHours), fontStat, Element.ALIGN_RIGHT));
 
-        statTable.addCell(createCell("Ist-Stunden", fontRegular, Element.ALIGN_LEFT, null, 1));
-        statTable.addCell(createCell(String.format(Locale.US, "%.2f", totalMonthlyNetHours), fontRegular, Element.ALIGN_RIGHT, null, 1));
+        statTable.addCell(createStatCell("Ist-Stunden", fontStat, Element.ALIGN_LEFT));
+        statTable.addCell(createStatCell(String.format(Locale.US, "%.2f", totalMonthlyNetHours), fontStat, Element.ALIGN_RIGHT));
 
-        statTable.addCell(createCell("Differenz", fontRegular, Element.ALIGN_LEFT, null, 1));
-        statTable.addCell(createCell(String.format(Locale.US, "%.2f", diffHours), fontRegular, Element.ALIGN_RIGHT, null, 1));
+        statTable.addCell(createStatCell("Differenz", fontStat, Element.ALIGN_LEFT));
+        statTable.addCell(createStatCell(String.format(Locale.US, "%.2f", diffHours), fontStat, Element.ALIGN_RIGHT));
 
-        statTable.addCell(createCell("Urlaub", fontRegular, Element.ALIGN_LEFT, null, 1));
-        statTable.addCell(createCell(String.format(Locale.US, "%.1f", (double) vacationDays), fontRegular, Element.ALIGN_RIGHT, null, 1));
+        statTable.addCell(createStatCell("Urlaub", fontStat, Element.ALIGN_LEFT));
+        statTable.addCell(createStatCell(String.format(Locale.US, "%.1f", (double) vacationDays), fontStat, Element.ALIGN_RIGHT));
 
         document.add(statTable);
 
@@ -201,6 +193,13 @@ public class WorkHoursPdfRenderer {
         if (colSpan > 1) {
             cell.setColspan(colSpan);
         }
+        return cell;
+    }
+
+    private PdfPCell createStatCell(String text, Font font, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setPadding(2f);
+        cell.setHorizontalAlignment(alignment);
         return cell;
     }
 

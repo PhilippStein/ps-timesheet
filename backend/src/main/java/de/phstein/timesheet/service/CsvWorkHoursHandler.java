@@ -180,6 +180,7 @@ public class CsvWorkHoursHandler implements TimesheetTemplateHandler {
             }
         }
         month.setTotalNetHours(Math.round(total * 100.0) / 100.0);
+        month.setWorkingDays(month.calculateWorkingDays());
     }
 
     private static int parseTimeToMinutes(String timeStr) {

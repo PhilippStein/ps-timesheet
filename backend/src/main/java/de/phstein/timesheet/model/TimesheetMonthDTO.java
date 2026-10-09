@@ -22,6 +22,7 @@ public class TimesheetMonthDTO {
     // Calculated summary metrics (computed dynamically)
     private Double totalNetHours;
     private Double totalPt;
+    private Integer workingDays;
     private Map<String, Double> taskTotals = new HashMap<>();
 
     public TimesheetMonthDTO() {
@@ -96,6 +97,30 @@ public class TimesheetMonthDTO {
 
     public void setTotalPt(Double totalPt) {
         this.totalPt = totalPt;
+    }
+
+    public Integer getWorkingDays() {
+        if (workingDays == null && days != null) {
+            return calculateWorkingDays();
+        }
+        return workingDays;
+    }
+
+    public void setWorkingDays(Integer workingDays) {
+        this.workingDays = workingDays;
+    }
+
+    public int calculateWorkingDays() {
+        if (days == null) {
+            return 0;
+        }
+        int count = 0;
+        for (TimesheetDayDTO day : days) {
+            if (day.isWorkDay()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public Map<String, Double> getTaskTotals() {

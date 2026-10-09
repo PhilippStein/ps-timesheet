@@ -31,4 +31,5 @@ export interface TimesheetMonth {
   totalNetHours?: number;
   totalPt?: number;
   taskTotals?: Record<string, number>;
+  workingDays?: number;
 }

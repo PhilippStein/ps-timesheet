@@ -195,6 +195,33 @@ public class TimesheetDayDTO {
         return sb.length() > 0 ? sb.toString() : null;
     }
 
+    public boolean isVacationOrSick() {
+        if (status == DayStatus.URLAUB || status == DayStatus.KRANK) {
+            return true;
+        }
+        if (location != null && (location.equalsIgnoreCase("Urlaub") || location.equalsIgnoreCase("Krank"))) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isWeekendDay() {
+        if (isWeekend) {
+            return true;
+        }
+        if (dayOfWeek != null) {
+            String dow = dayOfWeek.trim().toLowerCase();
+            if (dow.contains("samstag") || dow.contains("sonntag") || dow.contains("saturday") || dow.contains("sunday")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isWorkDay() {
+        return !isWeekendDay() && !isVacationOrSick();
+    }
+
     public Double getTotalPt() {
         return totalPt;
     }

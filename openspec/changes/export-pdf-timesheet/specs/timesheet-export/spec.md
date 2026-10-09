@@ -112,7 +112,6 @@ The system SHALL render `WorkHours` monthly timesheets according to the structur
  | Monatssumme    |                          | 160:00       |                       | <- Monatssumme (grau)
  +----------------+--------------------------+--------------+-----------------------+
 
- Statistik:
  +---------------------------+------------------------+
  | Arbeitstage               | 21                     |
  | Sollstunden               | 168.00                 |
