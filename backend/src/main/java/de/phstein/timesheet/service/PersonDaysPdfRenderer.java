@@ -1,8 +1,10 @@
 package de.phstein.timesheet.service;
 
+import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
+import com.lowagie.text.ListItem;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.pdf.PdfPCell;
@@ -13,7 +15,6 @@ import de.phstein.timesheet.model.TimesheetMonthDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.awt.Color;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
@@ -50,23 +51,31 @@ public class PersonDaysPdfRenderer {
         table.setWidthPercentage(100f);
         table.setHeaderRows(1);
 
-        // Calculate relative widths
-        float[] widths = new float[totalCols];
-        widths[0] = 22f; // Datum
-        for (int i = 0; i < taskColumns.size(); i++) {
-            widths[1 + i] = 12f; // Each task
+        // Calculate relative widths: keep task columns and location as narrow as possible, max space for Tätigkeit
+        float datumWidth = 14f;
+        float taskWidth = 7f;
+        float ortWidth = 11f;
+        float taetigkeitWidth = 100f - datumWidth - ortWidth - (taskWidth * taskColumns.size());
+        if (taetigkeitWidth < 30f) {
+            taetigkeitWidth = 30f;
         }
-        widths[1 + taskColumns.size()] = 38f; // Tätigkeit
-        widths[2 + taskColumns.size()] = 16f; // Ort
+
+        float[] widths = new float[totalCols];
+        widths[0] = datumWidth; // Datum
+        for (int i = 0; i < taskColumns.size(); i++) {
+            widths[1 + i] = taskWidth; // Each task
+        }
+        widths[1 + taskColumns.size()] = taetigkeitWidth; // Tätigkeit
+        widths[2 + taskColumns.size()] = ortWidth; // Ort
         table.setWidths(widths);
 
         // Header cells
-        table.addCell(createHeaderCell("Datum", fontBold, Element.ALIGN_LEFT));
+        table.addCell(createHeaderCell("Datum", fontBold, Element.ALIGN_CENTER));
         for (String task : taskColumns) {
-            table.addCell(createHeaderCell(task, fontBold, Element.ALIGN_RIGHT));
+            table.addCell(createHeaderCell(task, fontBold, Element.ALIGN_CENTER));
         }
-        table.addCell(createHeaderCell("Tätigkeit", fontBold, Element.ALIGN_LEFT));
-        table.addCell(createHeaderCell("Ort", fontBold, Element.ALIGN_LEFT));
+        table.addCell(createHeaderCell("Tätigkeit", fontBold, Element.ALIGN_CENTER));
+        table.addCell(createHeaderCell("Ort", fontBold, Element.ALIGN_CENTER));
 
         // Rows
         Map<String, Double> taskSums = new HashMap<>();
@@ -84,7 +93,7 @@ public class PersonDaysPdfRenderer {
             } else {
                 dateStr = "";
             }
-            table.addCell(createBodyCell(dateStr, fontRegular, Element.ALIGN_LEFT));
+            table.addCell(createBodyCell(dateStr, fontRegular, Element.ALIGN_RIGHT));
 
             // Task allocations
             for (String task : taskColumns) {
@@ -92,15 +101,14 @@ public class PersonDaysPdfRenderer {
                 if (pt != null && pt > 0.0) {
                     taskSums.put(task, taskSums.getOrDefault(task, 0.0) + pt);
                     totalPtSum += pt;
-                    table.addCell(createBodyCell(formatPt(pt), fontRegular, Element.ALIGN_RIGHT));
+                    table.addCell(createBodyCell(formatPt(pt), fontRegular, Element.ALIGN_CENTER));
                 } else {
-                    table.addCell(createBodyCell("", fontRegular, Element.ALIGN_RIGHT));
+                    table.addCell(createBodyCell("", fontRegular, Element.ALIGN_CENTER));
                 }
             }
 
-            // Tätigkeit (Notes)
-            String notes = day.getNotes();
-            table.addCell(createBodyCell(notes != null ? notes : "", fontRegular, Element.ALIGN_LEFT));
+            // Tätigkeit (Notes rendered as bullet list)
+            table.addCell(createNotesCell(day.getNotesList(), fontRegular));
 
             // Ort (Location or Status)
             String loc = day.getLocation();
@@ -120,7 +128,7 @@ public class PersonDaysPdfRenderer {
             Double sum = taskSums.get(task);
             PdfPCell taskSumCell = new PdfPCell(new Phrase(sum != null && sum > 0.0 ? formatPt(sum) : "", fontBold));
             taskSumCell.setPadding(4f);
-            taskSumCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            taskSumCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(taskSumCell);
         }
 
@@ -135,12 +143,13 @@ public class PersonDaysPdfRenderer {
         // Table Footer 2: Total PT row
         PdfPCell totalPtLabelCell = new PdfPCell(new Phrase("Gesamtzahl PT", fontBold));
         totalPtLabelCell.setPadding(4f);
+        totalPtLabelCell.setColspan(2);
         totalPtLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(totalPtLabelCell);
 
         PdfPCell totalPtValCell = new PdfPCell(new Phrase(formatPt(totalPtSum), fontBold));
         totalPtValCell.setPadding(4f);
-        totalPtValCell.setColspan(totalCols - 1);
+        totalPtValCell.setColspan(totalCols - 2);
         totalPtValCell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(totalPtValCell);
 
@@ -165,6 +174,24 @@ public class PersonDaysPdfRenderer {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(4f);
         cell.setHorizontalAlignment(alignment);
+        return cell;
+    }
+
+    private PdfPCell createNotesCell(List<String> items, Font font) {
+        PdfPCell cell = new PdfPCell();
+        cell.setPadding(4f);
+        if (items == null || items.isEmpty()) {
+            return cell;
+        }
+
+        com.lowagie.text.List list = new com.lowagie.text.List(false, 10f);
+        list.setListSymbol(new Chunk("\u2022 ", font));
+        for (String item : items) {
+            ListItem listItem = new ListItem(item, font);
+            listItem.setSpacingAfter(1.5f);
+            list.add(listItem);
+        }
+        cell.addElement(list);
         return cell;
     }
 

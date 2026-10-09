@@ -98,12 +98,12 @@ class PdfExportServiceTest {
         TimesheetMonthDTO month = storageService.loadOrCreateMonth(project, 2026, 10);
         TimesheetDayDTO day1 = month.getDays().get(0);
         day1.getTaskAllocations().put("Concept", 8.0);
-        day1.setNotes("- Architektur & OpenPDF");
+        day1.setNotes("- Architektur & OpenPDF\n- Code Review\n- Daily Standup");
         day1.setLocation("Remote");
 
         TimesheetDayDTO day2 = month.getDays().get(1);
         day2.getTaskAllocations().put("Dev", 4.5);
-        day2.setNotes("- Integration");
+        day2.setNotes("Integration ohne Prefix");
         day2.setLocation("Vor-Ort");
 
         byte[] pdfBytes = pdfExportService.generatePdf(month, project);
@@ -113,6 +113,9 @@ class PdfExportServiceTest {
         PdfReader reader = new PdfReader(pdfBytes);
         assertThat(reader.getNumberOfPages()).isGreaterThanOrEqualTo(1);
         reader.close();
+
+        List<String> parsed = TimesheetDayDTO.parseNotesToList("- Bullet 1\n* Bullet 2\n• Bullet 3\nPlain Text");
+        assertThat(parsed).containsExactly("Bullet 1", "Bullet 2", "Bullet 3", "Plain Text");
     }
 
     @Test

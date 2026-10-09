@@ -29,11 +29,11 @@ The system SHALL support merging an external background letterhead PDF onto each
 ### Requirement: PersonDays PDF Layout
 The system SHALL render `PersonDays` monthly timesheets according to the "Leistungsschein" format:
 - **Title**: A header above the table in 11 pt Bold stating `Leistungsschein <Monat> <Jahr>` (e.g., `Leistungsschein Oktober 2026`).
-- **Table Columns**:
+- **Table Columns & Widths**:
   1. `Datum`: formatted as two lines `Wochentag,\ndd.MM.yyyy` (e.g., `Montag,\n05.10.2026`).
-  2. Dynamic task columns: `<Task 1>`, `<Task 2>`, ..., with PT values formatted as integers or minimal decimals (e.g., `1`, `0.5`, `0.75` without trailing zeros, blank if 0).
-  3. `Tätigkeit`: Multiline description of activities / bulletpoints.
-  4. `Ort`: Location (e.g., `Remote`, `Vor-Ort`).
+  2. Dynamic task columns: `<Task 1>`, `<Task 2>`, ..., with PT values formatted as integers or minimal decimals (e.g., `1`, `0.5`, `0.75` without trailing zeros, blank if 0). Kept as compact / narrow as possible.
+  3. `Tätigkeit`: Rendered as a structured bullet point list (`• <Item>`) parsing daily notes (supporting multiline notes and bullet markers), with allocated maximum width.
+  4. `Ort`: Location (e.g., `Remote`, `Vor-Ort`, or status), kept as compact / narrow as possible.
 - **Table Footer**:
   1. A sum row containing `Summe` and the sum of PTs for each task column.
   2. A total sum row below displaying `Gesamtzahl PT` and the total sum of all PTs for the month.
