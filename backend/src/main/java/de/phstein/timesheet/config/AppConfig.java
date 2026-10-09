@@ -12,6 +12,7 @@ public class AppConfig {
 
     private List<ProjectConfig> projects = new ArrayList<>();
     private boolean hideEmptyWeekends = false;
+    private PdfExportConfig pdfExport = new PdfExportConfig();
 
     public AppConfig() {
     }
@@ -43,5 +44,13 @@ public class AppConfig {
 
     public void setHideEmptyWeekends(boolean hideEmptyWeekends) {
         this.hideEmptyWeekends = hideEmptyWeekends;
+    }
+
+    public PdfExportConfig getPdfExport() {
+        return pdfExport;
+    }
+
+    public void setPdfExport(PdfExportConfig pdfExport) {
+        this.pdfExport = pdfExport != null ? pdfExport : new PdfExportConfig();
     }
 }

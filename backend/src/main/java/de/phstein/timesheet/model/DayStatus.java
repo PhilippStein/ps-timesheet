@@ -18,6 +18,10 @@ public enum DayStatus {
         return value;
     }
 
+    public String getDisplayName() {
+        return value;
+    }
+
     @JsonCreator
     public static DayStatus fromValue(String value) {
         if (value == null || value.isBlank()) {

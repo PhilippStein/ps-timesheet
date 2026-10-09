@@ -40,6 +40,10 @@
       }
     </div>
 
+    <button mat-icon-button class="header-pdf-btn" (click)="state.exportPdf()" [disabled]="!state.selectedProject() || !state.selectedYear() || !state.selectedMonth()" matTooltip="Monat als PDF exportieren" aria-label="PDF exportieren">
+      <mat-icon>picture_as_pdf</mat-icon>
+    </button>
+
     <button mat-icon-button class="header-save-btn" (click)="forceSave()" matTooltip="Jetzt speichern (Ctrl+S)" aria-label="Speichern">
       <mat-icon>save</mat-icon>
     </button>

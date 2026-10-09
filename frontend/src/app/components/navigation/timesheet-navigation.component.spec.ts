@@ -17,7 +17,8 @@ describe('TimesheetNavigationComponent', () => {
       getProjectTree: vi.fn().mockReturnValue(of({ projectName: 'TestProj', basePath: '/tmp/test', template: 'WorkHours', years: [] })),
       getMonth: vi.fn().mockReturnValue(of(null)),
       saveMonth: vi.fn().mockReturnValue(of(null)),
-      saveProject: vi.fn().mockReturnValue(of({}))
+      saveProject: vi.fn().mockReturnValue(of({})),
+      downloadPdf: vi.fn().mockReturnValue(of(new Blob(['pdf content'], { type: 'application/pdf' })))
     };
 
     await TestBed.configureTestingModule({
@@ -62,5 +63,19 @@ describe('TimesheetNavigationComponent', () => {
 
     expect(state.isNavCollapsed()).toBe(false);
     expect(compiled.querySelector('.projects-column')).toBeTruthy();
+  });
+
+  it('should trigger PDF download on exportMonthPdf', () => {
+    state.selectedProject.set({ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' });
+    state.selectedYear.set(2026);
+
+    const event = new MouseEvent('click');
+    const stopPropagationSpy = vi.spyOn(event, 'stopPropagation');
+    const exportPdfSpy = vi.spyOn(state, 'exportPdf');
+
+    component.exportMonthPdf(10, event);
+
+    expect(stopPropagationSpy).toHaveBeenCalled();
+    expect(exportPdfSpy).toHaveBeenCalledWith(10);
   });
 });

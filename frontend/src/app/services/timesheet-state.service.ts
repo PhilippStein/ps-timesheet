@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
-import { AppConfigDTO, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
+import { AppConfigDTO, AppConfigUpdateDTO, PdfExportConfig, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
 import { TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
 import { TimesheetApiService } from './timesheet-api.service';
 
@@ -22,6 +22,7 @@ export class TimesheetStateService {
   readonly errorMessage = signal<string | null>(null);
   readonly isNavCollapsed = signal<boolean>(false);
   readonly hideEmptyWeekends = signal<boolean>(false);
+  readonly pdfExport = signal<PdfExportConfig | undefined>(undefined);
   readonly configPath = signal<string>('');
 
   // Derived Computations
@@ -64,6 +65,7 @@ export class TimesheetStateService {
       next: (cfg) => {
         this.configPath.set(cfg.configPath);
         this.hideEmptyWeekends.set(cfg.hideEmptyWeekends ?? false);
+        this.pdfExport.set(cfg.pdfExport);
         this.projects.set(cfg.projects);
         this.isLoading.set(false);
         this.updateSelectedProjectFromList(cfg.projects);
@@ -74,19 +76,45 @@ export class TimesheetStateService {
     });
   }
 
-  saveGlobalSettings(hideEmptyWeekends: boolean): Observable<AppConfigDTO> {
-    const payload = {
+  saveGlobalSettings(hideEmptyWeekends: boolean, pdfExport?: PdfExportConfig): Observable<AppConfigDTO> {
+    const payload: AppConfigUpdateDTO = {
       projects: this.projects(),
-      hideEmptyWeekends
+      hideEmptyWeekends,
+      pdfExport
     };
     return this.api.updateConfig(payload).pipe(
       tap(saved => {
         this.hideEmptyWeekends.set(saved.hideEmptyWeekends ?? hideEmptyWeekends);
+        this.pdfExport.set(saved.pdfExport ?? pdfExport);
         if (saved.configPath) {
           this.configPath.set(saved.configPath);
         }
       })
     );
+  }
+
+  exportPdf(month?: number) {
+    const proj = this.selectedProject()?.name;
+    const year = this.selectedYear();
+    const m = month ?? this.selectedMonth();
+    if (!proj || !year || !m) return;
+    this.api.downloadPdf(proj, year, m).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const monthPad = m < 10 ? `0${m}` : `${m}`;
+        a.download = `${proj}_${year}_${monthPad}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('PDF export failed', err);
+        this.errorMessage.set('PDF Export fehlgeschlagen: ' + (err.error?.message || err.message || 'Unbekannter Fehler'));
+      }
+    });
   }
 
   private initAutoSave() {

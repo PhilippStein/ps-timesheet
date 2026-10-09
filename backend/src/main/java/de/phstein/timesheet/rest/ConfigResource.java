@@ -30,7 +30,8 @@ public class ConfigResource {
         return Response.ok(Map.of(
                 "configPath", activePath,
                 "projects", config.getProjects(),
-                "hideEmptyWeekends", config.isHideEmptyWeekends()
+                "hideEmptyWeekends", config.isHideEmptyWeekends(),
+                "pdfExport", config.getPdfExport()
         )).build();
     }
 

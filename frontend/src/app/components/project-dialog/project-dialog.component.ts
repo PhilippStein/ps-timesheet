@@ -136,6 +136,20 @@ export interface ProjectDialogData {
             </button>
           </div>
         }
+
+        <div class="config-section">
+          <label class="section-label">PDF-Export Einstellungen (optional):</label>
+          @if (template === 'WorkHours') {
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>PDF-Header Titel</mat-label>
+              <input matInput [(ngModel)]="pdfHeaderTitle" placeholder="z.B. Tätigkeitsnachweis Entwicklung (Standard: Projektname)">
+            </mat-form-field>
+          }
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>PDF-Abschlusstext / Footer</mat-label>
+            <textarea matInput [(ngModel)]="pdfFooterText" rows="3" placeholder="z.B. Leistung wie vereinbart erbracht. Zahlbar rein netto..."></textarea>
+          </mat-form-field>
+        </div>
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -257,6 +271,8 @@ export class ProjectDialogComponent {
   name = this.data.project?.name ?? '';
   basePath = this.data.project?.basePath ?? '';
   template = this.data.project?.template ?? 'WorkHours';
+  pdfHeaderTitle = this.data.project?.pdfHeaderTitle ?? '';
+  pdfFooterText = this.data.project?.pdfFooterText ?? '';
   defaultTasks: string[] = this.data.project?.defaultTasks ? [...this.data.project.defaultTasks] : ['Konzeption', 'Entwicklung', 'Review & Test'];
   defaultNotes: string[] = this.data.project?.defaultNotes ? [...this.data.project.defaultNotes] : [];
   recurringNotes: RecurringNoteConfig[] = this.data.project?.recurringNotes
@@ -331,6 +347,8 @@ export class ProjectDialogComponent {
       name: this.name.trim(),
       basePath: this.basePath.trim(),
       template: this.template,
+      pdfHeaderTitle: this.pdfHeaderTitle?.trim() || undefined,
+      pdfFooterText: this.pdfFooterText?.trim() || undefined,
       defaultTasks: cleanTasks,
       defaultNotes: cleanDefaultNotes,
       recurringNotes: cleanRecurringNotes

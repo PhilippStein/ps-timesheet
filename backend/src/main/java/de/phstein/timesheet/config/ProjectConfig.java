@@ -17,6 +17,8 @@ public class ProjectConfig {
     private List<String> defaultTasks = new ArrayList<>();
     private List<String> defaultNotes = new ArrayList<>();
     private List<RecurringNoteConfig> recurringNotes = new ArrayList<>();
+    private String pdfHeaderTitle;
+    private String pdfFooterText;
 
     public ProjectConfig() {
     }
@@ -104,6 +106,22 @@ public class ProjectConfig {
 
     public void setRecurringNotes(List<RecurringNoteConfig> recurringNotes) {
         this.recurringNotes = recurringNotes != null ? new ArrayList<>(recurringNotes) : new ArrayList<>();
+    }
+
+    public String getPdfHeaderTitle() {
+        return pdfHeaderTitle;
+    }
+
+    public void setPdfHeaderTitle(String pdfHeaderTitle) {
+        this.pdfHeaderTitle = pdfHeaderTitle;
+    }
+
+    public String getPdfFooterText() {
+        return pdfFooterText;
+    }
+
+    public void setPdfFooterText(String pdfFooterText) {
+        this.pdfFooterText = pdfFooterText;
     }
 
     @Override

@@ -3,10 +3,20 @@ export interface RecurringNoteConfig {
   days: string[];
 }
 
+export interface PdfExportConfig {
+  templatePdfPath?: string;
+  marginTopMm?: number;
+  marginBottomMm?: number;
+  marginLeftMm?: number;
+  marginRightMm?: number;
+}
+
 export interface ProjectConfig {
   name: string;
   basePath: string;
   template: 'WorkHours' | 'PersonDays' | string;
+  pdfHeaderTitle?: string;
+  pdfFooterText?: string;
   defaultTasks?: string[];
   defaultNotes?: string[];
   recurringNotes?: RecurringNoteConfig[];
@@ -16,11 +26,13 @@ export interface AppConfigDTO {
   configPath: string;
   projects: ProjectConfig[];
   hideEmptyWeekends?: boolean;
+  pdfExport?: PdfExportConfig;
 }
 
 export interface AppConfigUpdateDTO {
   projects: ProjectConfig[];
   hideEmptyWeekends: boolean;
+  pdfExport?: PdfExportConfig;
 }
 
 export interface MonthNodeDTO {

@@ -15,8 +15,18 @@ describe('SettingsDialogComponent', () => {
 
   beforeEach(async () => {
     const apiSpy = {
-      getConfig: vi.fn().mockReturnValue(of({ configPath: '/home/user/.pstimesheet.yaml', projects: [], hideEmptyWeekends: false })),
-      updateConfig: vi.fn().mockReturnValue(of({ configPath: '/home/user/.pstimesheet.yaml', projects: [], hideEmptyWeekends: true })),
+      getConfig: vi.fn().mockReturnValue(of({
+        configPath: '/home/user/.pstimesheet.yaml',
+        projects: [],
+        hideEmptyWeekends: false,
+        pdfExport: { templatePdfPath: '/tmp/test.pdf', marginTopMm: 25, marginBottomMm: 25, marginLeftMm: 15, marginRightMm: 15 }
+      })),
+      updateConfig: vi.fn().mockImplementation((payload) => of({
+        configPath: '/home/user/.pstimesheet.yaml',
+        projects: payload.projects,
+        hideEmptyWeekends: payload.hideEmptyWeekends,
+        pdfExport: payload.pdfExport
+      })),
       getProjects: vi.fn().mockReturnValue(of([]))
     };
 
@@ -43,12 +53,18 @@ describe('SettingsDialogComponent', () => {
 
   it('should initialize with current state setting', () => {
     expect(component.hideEmptyWeekends).toBe(false);
+    expect(component.templatePdfPath).toBe('/tmp/test.pdf');
+    expect(component.marginTopMm).toBe(25);
   });
 
   it('should save setting and close dialog on save()', () => {
     component.hideEmptyWeekends = true;
+    component.templatePdfPath = '/new/stationery.pdf';
+    component.marginTopMm = 30;
     component.save();
     expect(stateService.hideEmptyWeekends()).toBe(true);
+    expect(stateService.pdfExport()?.templatePdfPath).toBe('/new/stationery.pdf');
+    expect(stateService.pdfExport()?.marginTopMm).toBe(30);
     expect(dialogRefSpy.close).toHaveBeenCalledWith(true);
   });
 });

@@ -35,6 +35,12 @@ class AppConfigServiceTest {
 
         assertThat(config).isNotNull();
         assertThat(config.isHideEmptyWeekends()).isFalse();
+        assertThat(config.getPdfExport()).isNotNull();
+        assertThat(config.getPdfExport().getMarginTopMm()).isEqualTo(20.0);
+        assertThat(config.getPdfExport().getMarginBottomMm()).isEqualTo(20.0);
+        assertThat(config.getPdfExport().getMarginLeftMm()).isEqualTo(15.0);
+        assertThat(config.getPdfExport().getMarginRightMm()).isEqualTo(15.0);
+        assertThat(config.getPdfExport().getTemplatePdfPath()).isNull();
         assertThat(config.getProjects()).hasSize(2);
         assertThat(config.getProjects().get(0).getName()).isEqualTo("Blubb");
         assertThat(config.getProjects().get(0).getTemplate()).isEqualTo("WorkHours");
@@ -48,10 +54,18 @@ class AppConfigServiceTest {
     void shouldLoadExistingYamlConfig() throws IOException {
         Path configFile = tempDir.resolve(".pstimesheet.yaml");
         String yamlContent = """
+                pdfExport:
+                  templatePdfPath: /tmp/stationery.pdf
+                  marginTopMm: 35.0
+                  marginBottomMm: 25.0
+                  marginLeftMm: 12.0
+                  marginRightMm: 12.0
                 projects:
                   - name: CustomProject
                     basePath: /tmp/custom
                     template: PersonDays
+                    pdfHeaderTitle: "Custom Title"
+                    pdfFooterText: "Thank you for your business"
                     defaultTasks:
                       - Feature
                       - Bugfix
@@ -75,11 +89,20 @@ class AppConfigServiceTest {
 
         AppConfig config = appConfigService.loadConfig();
 
+        assertThat(config.getPdfExport()).isNotNull();
+        assertThat(config.getPdfExport().getTemplatePdfPath()).isEqualTo("/tmp/stationery.pdf");
+        assertThat(config.getPdfExport().getMarginTopMm()).isEqualTo(35.0);
+        assertThat(config.getPdfExport().getMarginBottomMm()).isEqualTo(25.0);
+        assertThat(config.getPdfExport().getMarginLeftMm()).isEqualTo(12.0);
+        assertThat(config.getPdfExport().getMarginRightMm()).isEqualTo(12.0);
+
         assertThat(config.getProjects()).hasSize(1);
         ProjectConfig project = config.getProjects().get(0);
         assertThat(project.getName()).isEqualTo("CustomProject");
         assertThat(project.getBasePath()).isEqualTo("/tmp/custom");
         assertThat(project.getTemplate()).isEqualTo("PersonDays");
+        assertThat(project.getPdfHeaderTitle()).isEqualTo("Custom Title");
+        assertThat(project.getPdfFooterText()).isEqualTo("Thank you for your business");
         assertThat(project.getDefaultTasks()).containsExactly("Feature", "Bugfix");
         assertThat(project.getDefaultNotes()).containsExactly("Daily", "Code Review");
         assertThat(project.getRecurringNotes()).hasSize(2);

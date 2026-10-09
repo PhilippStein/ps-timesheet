@@ -42,4 +42,10 @@ export class TimesheetApiService {
   saveMonth(projectName: string, year: number, month: number, data: TimesheetMonth): Observable<TimesheetMonth> {
     return this.http.put<TimesheetMonth>(`${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/${year}/${month}`, data);
   }
+
+  downloadPdf(projectName: string, year: number, month: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/${year}/${month}/pdf`, {
+      responseType: 'blob'
+    });
+  }
 }

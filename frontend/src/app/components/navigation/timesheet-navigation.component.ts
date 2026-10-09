@@ -122,6 +122,14 @@ import { ProjectDialogComponent } from '../project-dialog/project-dialog.compone
                     <mat-icon class="status-icon empty-icon" matTooltip="Wird bei Klick initialisiert">radio_button_unchecked</mat-icon>
                   }
                 </div>
+                <button
+                  mat-icon-button
+                  class="item-action-btn pdf-action-btn"
+                  (click)="exportMonthPdf(monthNode.month, $event)"
+                  matTooltip="PDF exportieren"
+                  aria-label="PDF exportieren">
+                  <mat-icon>picture_as_pdf</mat-icon>
+                </button>
               </div>
             } @empty {
               <div class="empty-hint">-</div>
@@ -404,6 +412,11 @@ export class TimesheetNavigationComponent {
 
   formatMonthNumber(month: number): string {
     return month < 10 ? `0${month}` : `${month}`;
+  }
+
+  exportMonthPdf(month: number, event: MouseEvent) {
+    event.stopPropagation();
+    this.state.exportPdf(month);
   }
 
   openAddProjectDialog() {
