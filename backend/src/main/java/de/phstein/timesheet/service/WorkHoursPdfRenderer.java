@@ -29,6 +29,7 @@ public class WorkHoursPdfRenderer {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMAN);
     private static final Color HEADER_BG_COLOR = new Color(238, 238, 238); // #EEEEEE
+    private static final Color GRID_COLOR = new Color(100, 100, 100);
 
     @Inject
     PdfFontService pdfFontService;
@@ -187,6 +188,7 @@ public class WorkHoursPdfRenderer {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(4f);
         cell.setHorizontalAlignment(alignment);
+        cell.setBorderColor(GRID_COLOR);
         if (bgColor != null) {
             cell.setBackgroundColor(bgColor);
         }
@@ -200,6 +202,7 @@ public class WorkHoursPdfRenderer {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(2f);
         cell.setHorizontalAlignment(alignment);
+        cell.setBorderColor(GRID_COLOR);
         return cell;
     }
 

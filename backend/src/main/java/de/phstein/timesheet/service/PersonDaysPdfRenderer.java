@@ -15,6 +15,7 @@ import de.phstein.timesheet.model.TimesheetMonthDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.awt.Color;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
@@ -30,6 +31,7 @@ import java.util.Map;
 public class PersonDaysPdfRenderer {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE,\ndd.MM.yyyy", Locale.GERMAN);
+    private static final Color GRID_COLOR = new Color(100, 100, 100);
 
     @Inject
     PdfFontService pdfFontService;
@@ -121,6 +123,7 @@ public class PersonDaysPdfRenderer {
         // Table Footer 1: Task column sums
         PdfPCell sumLabelCell = new PdfPCell(new Phrase("Summe", fontBold));
         sumLabelCell.setPadding(4f);
+        sumLabelCell.setBorderColor(GRID_COLOR);
         sumLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(sumLabelCell);
 
@@ -128,28 +131,33 @@ public class PersonDaysPdfRenderer {
             Double sum = taskSums.get(task);
             PdfPCell taskSumCell = new PdfPCell(new Phrase(sum != null && sum > 0.0 ? formatPt(sum) : "", fontBold));
             taskSumCell.setPadding(4f);
+            taskSumCell.setBorderColor(GRID_COLOR);
             taskSumCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(taskSumCell);
         }
 
         PdfPCell emptyNotesCell = new PdfPCell(new Phrase("", fontRegular));
         emptyNotesCell.setPadding(4f);
+        emptyNotesCell.setBorderColor(GRID_COLOR);
         table.addCell(emptyNotesCell);
 
         PdfPCell emptyLocCell = new PdfPCell(new Phrase("", fontRegular));
         emptyLocCell.setPadding(4f);
+        emptyLocCell.setBorderColor(GRID_COLOR);
         table.addCell(emptyLocCell);
 
         // Table Footer 2: Total PT row
         PdfPCell totalPtLabelCell = new PdfPCell(new Phrase("Gesamtzahl PT", fontBold));
         totalPtLabelCell.setPadding(4f);
         totalPtLabelCell.setColspan(2);
+        totalPtLabelCell.setBorderColor(GRID_COLOR);
         totalPtLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(totalPtLabelCell);
 
         PdfPCell totalPtValCell = new PdfPCell(new Phrase(formatPt(totalPtSum), fontBold));
         totalPtValCell.setPadding(4f);
         totalPtValCell.setColspan(totalCols - 2);
+        totalPtValCell.setBorderColor(GRID_COLOR);
         totalPtValCell.setHorizontalAlignment(Element.ALIGN_LEFT);
         table.addCell(totalPtValCell);
 
@@ -167,6 +175,7 @@ public class PersonDaysPdfRenderer {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(4f);
         cell.setHorizontalAlignment(alignment);
+        cell.setBorderColor(GRID_COLOR);
         return cell;
     }
 
@@ -174,12 +183,14 @@ public class PersonDaysPdfRenderer {
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(4f);
         cell.setHorizontalAlignment(alignment);
+        cell.setBorderColor(GRID_COLOR);
         return cell;
     }
 
     private PdfPCell createNotesCell(List<String> items, Font font) {
         PdfPCell cell = new PdfPCell();
         cell.setPadding(4f);
+        cell.setBorderColor(GRID_COLOR);
         if (items == null || items.isEmpty()) {
             return cell;
         }
