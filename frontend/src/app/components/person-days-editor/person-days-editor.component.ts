@@ -55,7 +55,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       </div>
 
       <!-- TIMESHEET TABLE -->
-      <div class="table-scroll-wrapper">
+      <div class="table-scroll-wrapper" cdkDropListGroup>
         <table class="timesheet-table">
           <thead>
             <tr>
@@ -141,20 +141,42 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                 <!-- ADDITIVE DAILY NOTES CHIPS & TEMPLATES -->
                 <td class="col-notes">
                   <div class="notes-cell-container">
-                    <div class="notes-chips-list" cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="dropNote(day, $event)">
-                      @for (note of getNotesList(day); track $index) {
-                        <span class="note-chip" cdkDrag>
-                          <mat-icon cdkDragHandle class="chip-drag-handle" title="Verschieben">drag_indicator</mat-icon>
-                          <span class="note-chip-text">{{ note }}</span>
-                          <button
-                            type="button"
-                            class="note-chip-remove"
-                            (click)="removeNote(day, $index)"
-                            title="Notiz entfernen"
-                            aria-label="Notiz entfernen">
-                            <mat-icon>close</mat-icon>
-                          </button>
-                        </span>
+                    <div class="notes-chips-list" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="{ day: day, list: getNotesList(day) }" (cdkDropListDropped)="dropNote(day, $event)">
+                      @for (note of getNotesList(day); track $index; let noteIndex = $index) {
+                        @if (isEditingNote(day, noteIndex)) {
+                          <span class="note-chip note-chip-editing">
+                            <input
+                              type="text"
+                              class="note-chip-edit-input"
+                              [(ngModel)]="editingNote!.text"
+                              (keydown)="handleEditNoteKeydown($event, day, noteIndex)"
+                              (blur)="saveEditNote(day, noteIndex)"
+                              (click)="$event.stopPropagation()"
+                              autofocus
+                              #editInput>
+                          </span>
+                        } @else {
+                          <span class="note-chip" cdkDrag (dblclick)="startEditNote(day, noteIndex, note, $event)" [title]="'Doppelklick zum Bearbeiten: ' + note">
+                            <mat-icon cdkDragHandle class="chip-drag-handle" title="Verschieben (Tag) / Kopieren (anderer Tag)">drag_indicator</mat-icon>
+                            <span class="note-chip-text">{{ note }}</span>
+                            <button
+                              type="button"
+                              class="note-chip-edit"
+                              (click)="startEditNote(day, noteIndex, note, $event)"
+                              title="Notiz bearbeiten"
+                              aria-label="Notiz bearbeiten">
+                              <mat-icon>edit</mat-icon>
+                            </button>
+                            <button
+                              type="button"
+                              class="note-chip-remove"
+                              (click)="removeNote(day, noteIndex)"
+                              title="Notiz entfernen"
+                              aria-label="Notiz entfernen">
+                              <mat-icon>close</mat-icon>
+                            </button>
+                          </span>
+                        }
                       }
                     </div>
 
@@ -550,6 +572,28 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       padding: 2px 6px;
       gap: 4px;
       max-width: 100%;
+      user-select: none;
+      transition: background-color 0.15s, border-color 0.15s;
+
+      &.note-chip-editing {
+        background: #ffffff;
+        border-color: #339af0;
+        padding: 1px 4px;
+        box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+      }
+    }
+
+    .note-chip-edit-input {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 12px;
+      line-height: 1.2;
+      color: #1971c2;
+      font-weight: 500;
+      padding: 1px 2px;
+      min-width: 90px;
+      max-width: 280px;
     }
 
     .chip-drag-handle {
@@ -578,8 +622,10 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
     .note-chip-text {
       white-space: normal;
       word-break: break-word;
+      cursor: pointer;
     }
 
+    .note-chip-edit,
     .note-chip-remove {
       display: inline-flex;
       align-items: center;
@@ -589,22 +635,55 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       padding: 0;
       margin: 0;
       cursor: pointer;
-      color: #1971c2;
+      color: #74c0fc;
       border-radius: 50%;
       width: 14px;
       height: 14px;
+      flex-shrink: 0;
 
       mat-icon {
-        font-size: 12px;
-        width: 12px;
-        height: 12px;
-        line-height: 12px;
+        font-size: 11px;
+        width: 11px;
+        height: 11px;
+        line-height: 11px;
       }
 
       &:hover {
         background: #d0ebff;
-        color: #e03131;
       }
+    }
+
+    .note-chip-edit:hover {
+      color: #1971c2;
+    }
+
+    .note-chip-remove:hover {
+      color: #e03131;
+    }
+
+    .cdk-drag-preview {
+      box-sizing: border-box;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background: #e7f5ff;
+      color: #1971c2;
+      border: 1px solid #74c0fc;
+      padding: 2px 6px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cdk-drag-placeholder {
+      opacity: 0.35;
+      border: 1px dashed #339af0;
+      border-radius: 4px;
+      background: #e7f5ff;
+    }
+
+    .cdk-drag-animating {
+      transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
     }
 
     .note-suggestion-btn {
@@ -767,6 +846,8 @@ export class PersonDaysEditorComponent {
   private readonly dialog = inject(MatDialog);
   readonly DayStatus = DayStatus;
 
+  editingNote: { dayDate: string; index: number; text: string } | null = null;
+
   formatPt(pt: number | undefined): string {
     return pt != null ? pt.toFixed(2) : '0.00';
   }
@@ -886,6 +967,9 @@ export class PersonDaysEditorComponent {
   }
 
   removeNote(day: TimesheetDay, index: number) {
+    if (this.isEditingNote(day, index)) {
+      this.cancelEditNote();
+    }
     const list = [...this.getNotesList(day)];
     if (index >= 0 && index < list.length) {
       list.splice(index, 1);
@@ -895,15 +979,83 @@ export class PersonDaysEditorComponent {
     }
   }
 
-  dropNote(day: TimesheetDay, event: CdkDragDrop<string[]>) {
-    if (event.previousIndex === event.currentIndex) {
+  startEditNote(day: TimesheetDay, index: number, currentText: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.editingNote = {
+      dayDate: day.date,
+      index,
+      text: currentText
+    };
+  }
+
+  isEditingNote(day: TimesheetDay, index: number): boolean {
+    return this.editingNote !== null &&
+      this.editingNote.dayDate === day.date &&
+      this.editingNote.index === index;
+  }
+
+  saveEditNote(day: TimesheetDay, index: number) {
+    if (!this.editingNote || this.editingNote.dayDate !== day.date || this.editingNote.index !== index) {
       return;
     }
+    const trimmed = this.editingNote.text.trim();
     const list = [...this.getNotesList(day)];
-    moveItemInArray(list, event.previousIndex, event.currentIndex);
+    if (!trimmed) {
+      list.splice(index, 1);
+    } else {
+      list[index] = trimmed;
+    }
+    this.editingNote = null;
     day.notesList = list;
     day.notes = this.formatNotes(list);
     this.triggerUpdate();
+  }
+
+  cancelEditNote() {
+    this.editingNote = null;
+  }
+
+  handleEditNoteKeydown(event: KeyboardEvent, day: TimesheetDay, index: number) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.saveEditNote(day, index);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.cancelEditNote();
+    }
+  }
+
+  dropNote(targetDay: TimesheetDay, event: CdkDragDrop<any>) {
+    if (!event.previousContainer || event.previousContainer === event.container) {
+      // Reorder within the same day
+      if (event.previousIndex === event.currentIndex) {
+        return;
+      }
+      const list = [...this.getNotesList(targetDay)];
+      moveItemInArray(list, event.previousIndex, event.currentIndex);
+      targetDay.notesList = list;
+      targetDay.notes = this.formatNotes(list);
+      this.triggerUpdate();
+    } else {
+      // Cross-day drag & drop: copy note to target day
+      const sourceList: string[] | null = event.previousContainer.data?.list ||
+        (event.previousContainer.data?.day ? this.getNotesList(event.previousContainer.data.day) : null);
+      const noteToCopy = sourceList ? sourceList[event.previousIndex] : null;
+      if (noteToCopy) {
+        const targetList = [...this.getNotesList(targetDay)];
+        const insertIndex = event.currentIndex >= 0 && event.currentIndex <= targetList.length
+          ? event.currentIndex
+          : targetList.length;
+        targetList.splice(insertIndex, 0, noteToCopy);
+        targetDay.notesList = targetList;
+        targetDay.notes = this.formatNotes(targetList);
+        this.triggerUpdate();
+      }
+    }
   }
 
   getRecurringSuggestions(day: TimesheetDay): string[] {

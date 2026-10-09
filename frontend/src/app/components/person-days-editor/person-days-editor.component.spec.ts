@@ -195,6 +195,107 @@ describe('PersonDaysEditorComponent', () => {
     expect(day.notes).toBe('- Third\n- Second\n- First');
   });
 
+  it('should support cross-day drag and drop copying of notes', () => {
+    const day1 = {
+      date: '2026-10-01',
+      dayOfWeek: 'Donnerstag',
+      isWeekend: false,
+      notesList: ['Architektur Meeting', 'Dev Sync'],
+      notes: '- Architektur Meeting\n- Dev Sync'
+    };
+    const day2 = {
+      date: '2026-10-02',
+      dayOfWeek: 'Freitag',
+      isWeekend: false,
+      notesList: ['Code Review'],
+      notes: '- Code Review'
+    };
+
+    const container1 = { data: { day: day1, list: day1.notesList } };
+    const container2 = { data: { day: day2, list: day2.notesList } };
+
+    // Drag 'Architektur Meeting' (index 0) from day1 and drop onto day2 (index 1)
+    component.dropNote(day2, {
+      previousContainer: container1,
+      container: container2,
+      previousIndex: 0,
+      currentIndex: 1
+    } as any);
+
+    // Source day1 should keep its notes unchanged (copy semantics)
+    expect(day1.notesList).toEqual(['Architektur Meeting', 'Dev Sync']);
+    expect(day1.notes).toBe('- Architektur Meeting\n- Dev Sync');
+
+    // Target day2 should have the copied note inserted at index 1
+    expect(day2.notesList).toEqual(['Code Review', 'Architektur Meeting']);
+    expect(day2.notes).toBe('- Code Review\n- Architektur Meeting');
+  });
+
+  it('should support inline editing of notes', () => {
+    const day = stateService.activeMonthData()?.days[0];
+    expect(day).toBeDefined();
+    if (!day) return;
+
+    day.notesList = ['Tippfehler Task', 'Review'];
+    day.notes = '- Tippfehler Task\n- Review';
+
+    // Start editing note at index 0
+    component.startEditNote(day, 0, 'Tippfehler Task');
+    expect(component.isEditingNote(day, 0)).toBe(true);
+    expect(component.editingNote?.text).toBe('Tippfehler Task');
+
+    // Update text and save
+    component.editingNote!.text = 'Korrigierter Task';
+    component.saveEditNote(day, 0);
+
+    expect(component.isEditingNote(day, 0)).toBe(false);
+    expect(day.notesList).toEqual(['Korrigierter Task', 'Review']);
+    expect(day.notes).toBe('- Korrigierter Task\n- Review');
+
+    // Editing and clearing text should remove the note
+    component.startEditNote(day, 1, 'Review');
+    component.editingNote!.text = '   ';
+    component.saveEditNote(day, 1);
+    expect(day.notesList).toEqual(['Korrigierter Task']);
+    expect(day.notes).toBe('- Korrigierter Task');
+
+    // Canceling edit should discard changes
+    component.startEditNote(day, 0, 'Korrigierter Task');
+    component.editingNote!.text = 'Wird verworfen';
+    component.cancelEditNote();
+    expect(component.isEditingNote(day, 0)).toBe(false);
+    expect(day.notesList).toEqual(['Korrigierter Task']);
+  });
+
+  it('should handle Enter and Escape keys during note editing', () => {
+    const day = stateService.activeMonthData()?.days[0];
+    expect(day).toBeDefined();
+    if (!day) return;
+
+    day.notesList = ['Initialer Text'];
+    day.notes = '- Initialer Text';
+
+    component.startEditNote(day, 0, 'Initialer Text');
+    component.editingNote!.text = 'Text mit Enter gespeichert';
+
+    const enterEvent = new KeyboardEvent('keydown', { key: 'Enter' });
+    const preventSpy = vi.spyOn(enterEvent, 'preventDefault');
+    component.handleEditNoteKeydown(enterEvent, day, 0);
+
+    expect(preventSpy).toHaveBeenCalled();
+    expect(component.isEditingNote(day, 0)).toBe(false);
+    expect(day.notesList).toEqual(['Text mit Enter gespeichert']);
+
+    // Escape should cancel
+    component.startEditNote(day, 0, 'Text mit Enter gespeichert');
+    component.editingNote!.text = 'Neuer Text der abgebrochen wird';
+
+    const escEvent = new KeyboardEvent('keydown', { key: 'Escape' });
+    component.handleEditNoteKeydown(escEvent, day, 0);
+    expect(component.isEditingNote(day, 0)).toBe(false);
+    expect(day.notesList).toEqual(['Text mit Enter gespeichert']);
+  });
+
   it('should provide recurring and default notes suggestions', () => {
     stateService.selectedProject.set({
       name: 'Alpha',
