@@ -63,6 +63,7 @@ import { DateUtils } from '../../utils/date-utils';
               <tr [class.weekend-row]="day.isWeekend || day.weekend"
                   [class.vacation-row]="isVacation(day)"
                   [class.sick-row]="isSick(day)"
+                  [class.holiday-row]="isHoliday(day)"
                   [class.has-hours]="day.netHours && day.netHours > 0"
                   [class.hidden-weekend]="isRowHidden(day)"
                   [class.week-separator]="isWeekSeparator(rowIndex)">
@@ -77,6 +78,7 @@ import { DateUtils } from '../../utils/date-utils';
                     class="cell-select status-select"
                     [class.status-vacation]="isVacation(day)"
                     [class.status-sick]="isSick(day)"
+                    [class.status-holiday]="isHoliday(day)"
                     [id]="'input-' + rowIndex + '-status'"
                     [attr.data-row]="rowIndex"
                     [attr.data-col]="1"
@@ -86,6 +88,7 @@ import { DateUtils } from '../../utils/date-utils';
                     <option value="">Regulär</option>
                     <option [value]="DayStatus.URLAUB">Urlaub</option>
                     <option [value]="DayStatus.KRANK">Krank</option>
+                    <option [value]="DayStatus.FEIERTAG">Feiertag</option>
                   </select>
                 </td>
                 <td class="col-time">
@@ -378,6 +381,13 @@ import { DateUtils } from '../../utils/date-utils';
         font-weight: 600;
         border-color: #fecaca;
       }
+
+      &.status-holiday {
+        background-color: #f3e8ff;
+        color: #7e22ce;
+        font-weight: 600;
+        border-color: #e9d5ff;
+      }
     }
 
     tr.vacation-row {
@@ -391,6 +401,13 @@ import { DateUtils } from '../../utils/date-utils';
       background-color: #fff1f2;
       &:hover {
         background-color: #fee2e2;
+      }
+    }
+
+    tr.holiday-row {
+      background-color: #faf5ff;
+      &:hover {
+        background-color: #f3e8ff;
       }
     }
 
@@ -553,8 +570,12 @@ export class WorkHoursEditorComponent {
     return day.status === DayStatus.KRANK || day.status === 'Krank';
   }
 
+  isHoliday(day: TimesheetDay): boolean {
+    return day.status === DayStatus.FEIERTAG || day.status === 'Feiertag';
+  }
+
   isVacationOrSick(day: TimesheetDay): boolean {
-    return this.isVacation(day) || this.isSick(day);
+    return this.isVacation(day) || this.isSick(day) || this.isHoliday(day);
   }
 
   countWorkedDays(): number {

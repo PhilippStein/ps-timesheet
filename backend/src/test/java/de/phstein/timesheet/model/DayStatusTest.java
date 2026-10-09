@@ -19,6 +19,10 @@ class DayStatusTest {
         assertThat(DayStatus.fromValue("krank")).isEqualTo(DayStatus.KRANK);
         assertThat(DayStatus.fromValue("KRANK")).isEqualTo(DayStatus.KRANK);
 
+        assertThat(DayStatus.fromValue("Feiertag")).isEqualTo(DayStatus.FEIERTAG);
+        assertThat(DayStatus.fromValue("feiertag")).isEqualTo(DayStatus.FEIERTAG);
+        assertThat(DayStatus.fromValue("FEIERTAG")).isEqualTo(DayStatus.FEIERTAG);
+
         assertThat(DayStatus.fromValue(null)).isNull();
         assertThat(DayStatus.fromValue("")).isNull();
         assertThat(DayStatus.fromValue("   ")).isNull();
@@ -42,7 +46,7 @@ class DayStatusTest {
     }
 
     @Test
-    void shouldCalculateWorkingDaysExcludingWeekendsAndVacationAndSick() {
+    void shouldCalculateWorkingDaysExcludingWeekendsAndVacationAndSickAndHoliday() {
         TimesheetMonthDTO month = new TimesheetMonthDTO();
 
         TimesheetDayDTO workDay1 = new TimesheetDayDTO("2026-10-01", "Donnerstag", false);
@@ -57,12 +61,18 @@ class DayStatusTest {
         TimesheetDayDTO sickDay = new TimesheetDayDTO("2026-10-06", "Dienstag", false);
         sickDay.setStatus(DayStatus.KRANK);
 
-        TimesheetDayDTO locationVacationDay = new TimesheetDayDTO("2026-10-07", "Mittwoch", false);
+        TimesheetDayDTO holidayDay = new TimesheetDayDTO("2026-10-07", "Mittwoch", false);
+        holidayDay.setStatus(DayStatus.FEIERTAG);
+
+        TimesheetDayDTO locationVacationDay = new TimesheetDayDTO("2026-10-08", "Donnerstag", false);
         locationVacationDay.setLocation("Urlaub");
 
-        TimesheetDayDTO workDay3 = new TimesheetDayDTO("2026-10-08", "Donnerstag", false);
+        TimesheetDayDTO locationHolidayDay = new TimesheetDayDTO("2026-10-09", "Freitag", false);
+        locationHolidayDay.setLocation("Feiertag");
 
-        month.setDays(java.util.List.of(workDay1, workDay2, weekend1, weekend2, vacationDay, sickDay, locationVacationDay, workDay3));
+        TimesheetDayDTO workDay3 = new TimesheetDayDTO("2026-10-12", "Montag", false);
+
+        month.setDays(java.util.List.of(workDay1, workDay2, weekend1, weekend2, vacationDay, sickDay, holidayDay, locationVacationDay, locationHolidayDay, workDay3));
 
         assertThat(month.calculateWorkingDays()).isEqualTo(3);
         assertThat(month.getWorkingDays()).isEqualTo(3);

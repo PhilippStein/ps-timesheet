@@ -353,7 +353,14 @@ describe('PersonDaysEditorComponent', () => {
     expect(day.status).toBe(DayStatus.KRANK);
     expect(day.location).toBe('Krank');
 
-    // Resetting status to Regulär (null) should clear location if it was Krank/Urlaub
+    // Changing status to Feiertag should set location to Feiertag
+    component.setStatus(day, DayStatus.FEIERTAG);
+    expect(day.status).toBe(DayStatus.FEIERTAG);
+    expect(day.location).toBe('Feiertag');
+    expect(component.isHoliday(day)).toBe(true);
+    expect(component.isVacationOrSick(day)).toBe(true);
+
+    // Resetting status to Regulär (null) should clear location if it was Krank/Urlaub/Feiertag
     component.setStatus(day, null);
     expect(day.status).toBeNull();
     expect(day.location).toBeNull();

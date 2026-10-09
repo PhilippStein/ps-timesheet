@@ -70,7 +70,7 @@ describe('WorkHoursEditorComponent', () => {
     expect(component.countWorkedDays()).toBe(1);
   });
 
-  it('should exclude vacation and sick days from work days count while keeping hours in total', () => {
+  it('should exclude vacation, sick, and holiday days from work days count while keeping hours in total', () => {
     stateService.activeMonthData.set({
       projectName: 'Test',
       year: 2026,
@@ -83,16 +83,18 @@ describe('WorkHoursEditorComponent', () => {
         { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 0, status: null },
         { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0, status: null },
         { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, netHours: 0, status: DayStatus.KRANK },
-        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, netHours: 7.5, status: null }
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, netHours: 7.5, status: null },
+        { date: '2026-10-07', dayOfWeek: 'Mittwoch', isWeekend: false, netHours: 0, status: DayStatus.FEIERTAG }
       ]
     });
 
-    // 4 weekdays: 1 vacation, 1 sick => 2 regular work days
+    // 5 weekdays: 1 vacation, 1 sick, 1 holiday => 2 regular work days
     expect(component.countTotalWorkDays()).toBe(2);
     // 2 regular work days: 10-01 has 8h, 10-06 has 7.5h => 2 worked workdays
     expect(component.countWorkedDays()).toBe(2);
     expect(component.isVacation(stateService.activeMonthData()!.days[1])).toBe(true);
     expect(component.isSick(stateService.activeMonthData()!.days[4])).toBe(true);
+    expect(component.isHoliday(stateService.activeMonthData()!.days[6])).toBe(true);
   });
 
   it('should identify empty weekend rows and hide them when setting is enabled', () => {

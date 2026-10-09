@@ -196,10 +196,10 @@ public class TimesheetDayDTO {
     }
 
     public boolean isVacationOrSick() {
-        if (status == DayStatus.URLAUB || status == DayStatus.KRANK) {
+        if (status == DayStatus.URLAUB || status == DayStatus.KRANK || status == DayStatus.FEIERTAG) {
             return true;
         }
-        if (location != null && (location.equalsIgnoreCase("Urlaub") || location.equalsIgnoreCase("Krank"))) {
+        if (location != null && (location.equalsIgnoreCase("Urlaub") || location.equalsIgnoreCase("Krank") || location.equalsIgnoreCase("Feiertag"))) {
             return true;
         }
         return false;

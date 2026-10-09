@@ -309,7 +309,7 @@ export class TimesheetStateService {
 
   private recalculateClientSide(month: TimesheetMonth) {
     const isWeekend = (d: TimesheetDay) => !!(d.isWeekend || d.weekend || d.dayOfWeek === 'Samstag' || d.dayOfWeek === 'Sonntag' || d.dayOfWeek === 'Saturday' || d.dayOfWeek === 'Sunday');
-    const isVacationOrSick = (d: TimesheetDay) => d.status === DayStatus.URLAUB || d.status === 'Urlaub' || d.status === DayStatus.KRANK || d.status === 'Krank' || d.location === 'Urlaub' || d.location === 'Krank';
+    const isVacationOrSick = (d: TimesheetDay) => d.status === DayStatus.URLAUB || d.status === 'Urlaub' || d.status === DayStatus.KRANK || d.status === 'Krank' || d.status === DayStatus.FEIERTAG || d.status === 'Feiertag' || d.location === 'Urlaub' || d.location === 'Krank' || d.location === 'Feiertag';
 
     month.workingDays = (month.days || []).filter(d => !isWeekend(d) && !isVacationOrSick(d)).length;
 

@@ -76,6 +76,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
               <tr [class.weekend-row]="day.isWeekend || day.weekend"
                   [class.vacation-row]="isVacation(day)"
                   [class.sick-row]="isSick(day)"
+                  [class.holiday-row]="isHoliday(day)"
                   [class.has-hours]="day.totalPt && day.totalPt > 0"
                   [class.hidden-weekend]="isRowHidden(day)"
                   [class.week-separator]="isWeekSeparator(rowIndex)">
@@ -90,6 +91,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                     class="cell-select status-select"
                     [class.status-vacation]="isVacation(day)"
                     [class.status-sick]="isSick(day)"
+                    [class.status-holiday]="isHoliday(day)"
                     [id]="'input-' + rowIndex + '-status'"
                     [attr.data-row]="rowIndex"
                     [attr.data-col]="1"
@@ -99,6 +101,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                     <option value="">Regulär</option>
                     <option [value]="DayStatus.URLAUB">Urlaub</option>
                     <option [value]="DayStatus.KRANK">Krank</option>
+                    <option [value]="DayStatus.FEIERTAG">Feiertag</option>
                   </select>
                 </td>
                 <td class="col-location">
@@ -115,6 +118,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                     <option value="Vor-Ort">Vor-Ort</option>
                     <option value="Urlaub">Urlaub</option>
                     <option value="Krank">Krank</option>
+                    <option value="Feiertag">Feiertag</option>
                   </select>
                 </td>
 
@@ -461,6 +465,13 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
         font-weight: 600;
         border-color: #fecaca;
       }
+
+      &.status-holiday {
+        background-color: #f3e8ff;
+        color: #7e22ce;
+        font-weight: 600;
+        border-color: #e9d5ff;
+      }
     }
 
     tr.vacation-row {
@@ -474,6 +485,13 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       background-color: #fff1f2;
       &:hover {
         background-color: #fee2e2;
+      }
+    }
+
+    tr.holiday-row {
+      background-color: #faf5ff;
+      &:hover {
+        background-color: #f3e8ff;
       }
     }
 
@@ -861,11 +879,15 @@ export class PersonDaysEditorComponent {
   }
 
   isSick(day: TimesheetDay): boolean {
-    return day.status === DayStatus.KRANK || day.status === 'Krank';
+    return day.status === DayStatus.KRANK || day.status === 'Krank' || day.location === 'Krank';
+  }
+
+  isHoliday(day: TimesheetDay): boolean {
+    return day.status === DayStatus.FEIERTAG || day.status === 'Feiertag' || day.location === 'Feiertag';
   }
 
   isVacationOrSick(day: TimesheetDay): boolean {
-    return this.isVacation(day) || this.isSick(day);
+    return this.isVacation(day) || this.isSick(day) || this.isHoliday(day);
   }
 
   countLoggedDays(): number {
@@ -888,7 +910,9 @@ export class PersonDaysEditorComponent {
       day.location = 'Urlaub';
     } else if (day.status === DayStatus.KRANK || day.status === 'Krank') {
       day.location = 'Krank';
-    } else if (!day.status && (day.location === 'Urlaub' || day.location === 'Krank')) {
+    } else if (day.status === DayStatus.FEIERTAG || day.status === 'Feiertag') {
+      day.location = 'Feiertag';
+    } else if (!day.status && (day.location === 'Urlaub' || day.location === 'Krank' || day.location === 'Feiertag')) {
       day.location = null;
     }
     this.triggerUpdate();

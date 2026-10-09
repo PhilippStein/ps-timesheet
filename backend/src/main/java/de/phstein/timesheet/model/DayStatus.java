@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum DayStatus {
     URLAUB("Urlaub"),
-    KRANK("Krank");
+    KRANK("Krank"),
+    FEIERTAG("Feiertag");
 
     private final String value;
 

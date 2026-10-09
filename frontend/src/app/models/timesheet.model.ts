@@ -1,6 +1,7 @@
 export enum DayStatus {
   URLAUB = 'Urlaub',
-  KRANK = 'Krank'
+  KRANK = 'Krank',
+  FEIERTAG = 'Feiertag'
 }
 
 export interface TimesheetDay {
