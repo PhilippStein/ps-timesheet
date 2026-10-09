@@ -41,12 +41,7 @@ class AppConfigServiceTest {
         assertThat(config.getPdfExport().getMarginLeftMm()).isEqualTo(15.0);
         assertThat(config.getPdfExport().getMarginRightMm()).isEqualTo(15.0);
         assertThat(config.getPdfExport().getTemplatePdfPath()).isNull();
-        assertThat(config.getProjects()).hasSize(2);
-        assertThat(config.getProjects().get(0).getName()).isEqualTo("Blubb");
-        assertThat(config.getProjects().get(0).getTemplate()).isEqualTo("WorkHours");
-        assertThat(config.getProjects().get(1).getName()).isEqualTo("ProjectAlpha");
-        assertThat(config.getProjects().get(1).getTemplate()).isEqualTo("PersonDays");
-        assertThat(config.getProjects().get(1).getDefaultTasks()).containsExactly("Konzeption", "Entwicklung", "Review & Test");
+        assertThat(config.getProjects()).isEmpty();
         assertThat(Files.exists(configFile)).isTrue();
     }
 
@@ -173,6 +168,9 @@ class AppConfigServiceTest {
         Path configFile = tempDir.resolve(".pstimesheet.yaml");
         appConfigService.setCustomConfigPathForTesting(configFile);
         appConfigService.loadConfig();
+
+        ProjectConfig project = new ProjectConfig("Blubb", "/tmp/blubb", "WorkHours", List.of());
+        appConfigService.addOrUpdateProject(project);
 
         boolean deleted = appConfigService.deleteProject("Blubb");
         assertThat(deleted).isTrue();

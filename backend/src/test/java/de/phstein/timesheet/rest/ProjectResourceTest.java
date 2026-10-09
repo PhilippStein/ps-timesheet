@@ -45,7 +45,7 @@ class ProjectResourceTest {
                 .when().get("/api/projects")
                 .then()
                 .statusCode(200)
-                .body("size()", greaterThanOrEqualTo(1));
+                .body("size()", greaterThanOrEqualTo(0));
     }
 
     @Test

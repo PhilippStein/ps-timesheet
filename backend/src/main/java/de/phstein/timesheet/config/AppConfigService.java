@@ -93,7 +93,7 @@ public class AppConfigService {
         }
 
         if (!Files.exists(activeConfigPath)) {
-            this.cachedConfig = createDefaultConfig();
+            this.cachedConfig = new AppConfig();
             saveConfig(this.cachedConfig);
             return this.cachedConfig;
         }
@@ -211,24 +211,5 @@ public class AppConfigService {
 
     public void setCustomConfigPathForTesting(Path path) {
         this.activeConfigPath = path;
-    }
-
-    private AppConfig createDefaultConfig() {
-        String userHome = System.getProperty("user.home");
-        List<ProjectConfig> defaultProjects = List.of(
-                new ProjectConfig(
-                        "Blubb",
-                        userHome + File.separator + "timesheets" + File.separator + "Blubb",
-                        "WorkHours",
-                        List.of()
-                ),
-                new ProjectConfig(
-                        "ProjectAlpha",
-                        userHome + File.separator + "timesheets" + File.separator + "ProjectAlpha",
-                        "PersonDays",
-                        List.of("Konzeption", "Entwicklung", "Review & Test")
-                )
-        );
-        return new AppConfig(defaultProjects);
     }
 }
