@@ -31,6 +31,43 @@
       background: rgba(255, 255, 255, 0.1) !important;
     }
   }
+
+  .header-pdf-btn {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    font-size: 13px;
+    height: 32px;
+    padding: 0 12px !important;
+    border-radius: 16px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s ease, opacity 0.15s ease;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #ffffff !important;
+      margin-right: 0 !important;
+    }
+
+    &:hover:not([disabled]) {
+      background: rgba(255, 255, 255, 0.25) !important;
+    }
+
+    &[disabled] {
+      opacity: 0.45;
+      color: rgba(255, 255, 255, 0.5) !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      cursor: not-allowed;
+
+      mat-icon {
+        color: rgba(255, 255, 255, 0.5) !important;
+      }
+    }
+  }
 }
 
 .brand {
