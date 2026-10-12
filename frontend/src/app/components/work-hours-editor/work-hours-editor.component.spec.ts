@@ -161,4 +161,36 @@ describe('WorkHoursEditorComponent', () => {
     expect(component.isWeekSeparator(4)).toBe(true);  // Montag is start of new week after Friday
     expect(component.isWeekSeparator(5)).toBe(false); // Dienstag is same week as Monday
   });
+  it('should calculate and format net invoice amount when hourlyRate is configured', () => {
+    stateService.selectedProject.set({
+      name: 'Test',
+      basePath: '/tmp/test',
+      template: 'WorkHours',
+      hourlyRate: 95.0
+    });
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      totalNetHours: 160.0,
+      days: []
+    });
+
+    expect(component.hasHourlyRate()).toBe(true);
+    expect(component.calculateInvoiceAmount()).toBe(15200);
+    const formatted = component.formatCurrency(15200);
+    expect(formatted).toContain('15.200');
+    expect(formatted).toContain('€');
+  });
+
+  it('should not show hourly rate when not configured', () => {
+    stateService.selectedProject.set({
+      name: 'Test',
+      basePath: '/tmp/test',
+      template: 'WorkHours'
+    });
+    expect(component.hasHourlyRate()).toBe(false);
+  });
 });

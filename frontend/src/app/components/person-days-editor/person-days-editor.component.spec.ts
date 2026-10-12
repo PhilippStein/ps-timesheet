@@ -487,4 +487,37 @@ describe('PersonDaysEditorComponent', () => {
     component.clearRow(1);
     expect(stateService.activeMonthData()?.days[1].location).toBeNull();
   });
+
+  it('should calculate and format net invoice amount when dailyRate is configured', () => {
+    stateService.selectedProject.set({
+      name: 'Alpha',
+      basePath: '/tmp/test',
+      template: 'PersonDays',
+      dailyRate: 950.0
+    });
+    stateService.activeMonthData.set({
+      projectName: 'Alpha',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      totalPt: 18.5,
+      days: []
+    });
+
+    expect(component.hasDailyRate()).toBe(true);
+    expect(component.calculateInvoiceAmount()).toBe(17575);
+    const formatted = component.formatCurrency(17575);
+    expect(formatted).toContain('17.575');
+    expect(formatted).toContain('€');
+  });
+
+  it('should not show daily rate when not configured', () => {
+    stateService.selectedProject.set({
+      name: 'Alpha',
+      basePath: '/tmp/test',
+      template: 'PersonDays'
+    });
+    expect(component.hasDailyRate()).toBe(false);
+  });
 });

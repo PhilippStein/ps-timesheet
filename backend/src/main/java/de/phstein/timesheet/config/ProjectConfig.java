@@ -19,6 +19,8 @@ public class ProjectConfig {
     private List<RecurringNoteConfig> recurringNotes = new ArrayList<>();
     private String pdfHeaderTitle;
     private String pdfFooterText;
+    private Double hourlyRate;
+    private Double dailyRate;
 
     public ProjectConfig() {
     }
@@ -122,6 +124,22 @@ public class ProjectConfig {
 
     public void setPdfFooterText(String pdfFooterText) {
         this.pdfFooterText = pdfFooterText;
+    }
+
+    public Double getHourlyRate() {
+        return hourlyRate;
+    }
+
+    public void setHourlyRate(Double hourlyRate) {
+        this.hourlyRate = hourlyRate;
+    }
+
+    public Double getDailyRate() {
+        return dailyRate;
+    }
+
+    public void setDailyRate(Double dailyRate) {
+        this.dailyRate = dailyRate;
     }
 
     @Override

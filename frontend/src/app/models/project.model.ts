@@ -15,6 +15,8 @@ export interface ProjectConfig {
   name: string;
   basePath: string;
   template: 'WorkHours' | 'PersonDays' | string;
+  hourlyRate?: number | null;
+  dailyRate?: number | null;
   pdfHeaderTitle?: string;
   pdfFooterText?: string;
   defaultTasks?: string[];

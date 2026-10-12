@@ -68,6 +68,20 @@ export type ProjectDialogResult = ProjectConfig | { delete: true; projectName: s
           </mat-radio-group>
         </div>
 
+        @if (template === 'WorkHours') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Stundensatz (€)</mat-label>
+            <input matInput type="number" step="0.5" min="0" [(ngModel)]="hourlyRate" placeholder="z.B. 95.00">
+            <mat-hint>Optional: Dient zur Berechnung des monatlichen Netto-Rechnungsbetrags</mat-hint>
+          </mat-form-field>
+        } @else if (template === 'PersonDays') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Tagessatz (€)</mat-label>
+            <input matInput type="number" step="10" min="0" [(ngModel)]="dailyRate" placeholder="z.B. 950.00">
+            <mat-hint>Optional: Dient zur Berechnung des monatlichen Netto-Rechnungsbetrags</mat-hint>
+          </mat-form-field>
+        }
+
         @if (template === 'PersonDays') {
           <div class="config-section">
             <label class="section-label">Standard-Aufgaben (für neue Monate):</label>
@@ -397,6 +411,8 @@ export class ProjectDialogComponent {
   name = this.data.project?.name ?? '';
   basePath = this.data.project?.basePath ?? '';
   template = this.data.project?.template ?? 'WorkHours';
+  hourlyRate: number | null | undefined = this.data.project?.hourlyRate ?? null;
+  dailyRate: number | null | undefined = this.data.project?.dailyRate ?? null;
   pdfHeaderTitle = this.data.project?.pdfHeaderTitle ?? '';
   pdfFooterText = this.data.project?.pdfFooterText ?? '';
   defaultTasks: string[] = this.data.project?.defaultTasks ? [...this.data.project.defaultTasks] : ['Konzeption', 'Entwicklung', 'Review & Test'];
@@ -475,10 +491,20 @@ export class ProjectDialogComponent {
           .filter(r => r.text.length > 0 && r.days.length > 0)
       : [];
 
+    const parsedHourlyRate = this.hourlyRate != null && !isNaN(Number(this.hourlyRate)) && Number(this.hourlyRate) > 0
+      ? Number(this.hourlyRate)
+      : undefined;
+
+    const parsedDailyRate = this.dailyRate != null && !isNaN(Number(this.dailyRate)) && Number(this.dailyRate) > 0
+      ? Number(this.dailyRate)
+      : undefined;
+
     const result: ProjectConfig = {
       name: this.name.trim(),
       basePath: this.basePath.trim(),
       template: this.template,
+      hourlyRate: parsedHourlyRate,
+      dailyRate: parsedDailyRate,
       pdfHeaderTitle: this.pdfHeaderTitle?.trim() || undefined,
       pdfFooterText: this.pdfFooterText?.trim() || undefined,
       defaultTasks: cleanTasks,

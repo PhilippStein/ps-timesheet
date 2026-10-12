@@ -43,6 +43,12 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           <span class="metric-label">Erfasste Arbeitstage:</span>
           <span class="metric-value font-mono">{{ countLoggedDays() }} / {{ countTotalWorkDays() }}</span>
         </div>
+        @if (hasDailyRate()) {
+          <div class="metric-item">
+            <span class="metric-label">Rechnungsbetrag (Netto):</span>
+            <span class="metric-value font-mono">{{ formatCurrency(calculateInvoiceAmount()) }}</span>
+          </div>
+        }
 
         <button mat-stroked-button color="primary" class="edit-tasks-btn" (click)="openEditTasksDialog()">
           <mat-icon>view_column</mat-icon> Aufgaben anpassen ({{ state.activeMonthData()?.taskColumns?.length || 0 }})
@@ -1147,6 +1153,21 @@ export class PersonDaysEditorComponent {
 
   formatPt(pt: number | undefined): string {
     return pt != null ? pt.toFixed(2) : '0.00';
+  }
+
+  hasDailyRate(): boolean {
+    const rate = this.state.selectedProject()?.dailyRate;
+    return rate != null && rate > 0;
+  }
+
+  calculateInvoiceAmount(): number {
+    const rate = this.state.selectedProject()?.dailyRate || 0;
+    const pt = this.state.activeMonthData()?.totalPt || 0;
+    return pt * rate;
+  }
+
+  formatCurrency(val: number): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
   }
 
   isWeekend(day: TimesheetDay): boolean {

@@ -30,6 +30,7 @@ describe('ProjectDialogComponent', () => {
     component.name = 'Test Project';
     component.basePath = '/tmp/test';
     component.template = 'PersonDays';
+    component.dailyRate = 950;
     component.pdfHeaderTitle = 'Custom Header';
     component.pdfFooterText = 'Custom Footer Text';
     component.defaultTasks = ['Task 1', 'Task 2'];
@@ -46,6 +47,8 @@ describe('ProjectDialogComponent', () => {
       name: 'Test Project',
       basePath: '/tmp/test',
       template: 'PersonDays',
+      hourlyRate: undefined,
+      dailyRate: 950,
       pdfHeaderTitle: 'Custom Header',
       pdfFooterText: 'Custom Footer Text',
       defaultTasks: ['Task 1', 'Task 2'],

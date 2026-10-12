@@ -38,6 +38,12 @@ import { DateUtils } from '../../utils/date-utils';
           <span class="metric-label">Erfasste Arbeitstage:</span>
           <span class="metric-value font-mono">{{ countWorkedDays() }} / {{ countTotalWorkDays() }}</span>
         </div>
+        @if (hasHourlyRate()) {
+          <div class="metric-item">
+            <span class="metric-label">Rechnungsbetrag (Netto):</span>
+            <span class="metric-value font-mono">{{ formatCurrency(calculateInvoiceAmount()) }}</span>
+          </div>
+        }
         <div class="header-actions">
           <button
             mat-icon-button
@@ -696,6 +702,21 @@ export class WorkHoursEditorComponent {
 
   formatHours(hours: number | undefined): string {
     return hours != null ? hours.toFixed(2) : '0.00';
+  }
+
+  hasHourlyRate(): boolean {
+    const rate = this.state.selectedProject()?.hourlyRate;
+    return rate != null && rate > 0;
+  }
+
+  calculateInvoiceAmount(): number {
+    const rate = this.state.selectedProject()?.hourlyRate || 0;
+    const hours = this.state.activeMonthData()?.totalNetHours || 0;
+    return hours * rate;
+  }
+
+  formatCurrency(val: number): string {
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(val);
   }
 
   isWeekend(day: TimesheetDay): boolean {

@@ -59,6 +59,8 @@ class AppConfigServiceTest {
                   - name: CustomProject
                     basePath: /tmp/custom
                     template: PersonDays
+                    hourlyRate: 95.0
+                    dailyRate: 950.0
                     pdfHeaderTitle: "Custom Title"
                     pdfFooterText: "Thank you for your business"
                     defaultTasks:
@@ -96,6 +98,8 @@ class AppConfigServiceTest {
         assertThat(project.getName()).isEqualTo("CustomProject");
         assertThat(project.getBasePath()).isEqualTo("/tmp/custom");
         assertThat(project.getTemplate()).isEqualTo("PersonDays");
+        assertThat(project.getHourlyRate()).isEqualTo(95.0);
+        assertThat(project.getDailyRate()).isEqualTo(950.0);
         assertThat(project.getPdfHeaderTitle()).isEqualTo("Custom Title");
         assertThat(project.getPdfFooterText()).isEqualTo("Thank you for your business");
         assertThat(project.getDefaultTasks()).containsExactly("Feature", "Bugfix");
