@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { DayStatus, TimesheetDay } from '../../models/timesheet.model';
 import { DateUtils } from '../../utils/date-utils';
@@ -22,7 +23,8 @@ import { DateUtils } from '../../utils/date-utils';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatMenuModule
   ],
   template: `
     <div class="editor-container" (keydown)="handleGlobalKeydown($event)">
@@ -36,10 +38,51 @@ import { DateUtils } from '../../utils/date-utils';
           <span class="metric-label">Erfasste Arbeitstage:</span>
           <span class="metric-value font-mono">{{ countWorkedDays() }} / {{ countTotalWorkDays() }}</span>
         </div>
-        <div class="shortcut-hints">
-          <span class="hint-tag"><kbd>Ctrl+D</kbd> Vortag kopieren</span>
-          <span class="hint-tag"><kbd>Tab</kbd> Nächste Spalte</span>
-          <span class="hint-tag"><kbd>Enter</kbd> Nächster Tag</span>
+        <div class="header-actions">
+          <button
+            mat-icon-button
+            class="info-shortcuts-btn"
+            [matMenuTriggerFor]="shortcutsMenu"
+            matTooltip="Tastaturkürzel & Bedienhinweise"
+            aria-label="Tastaturkürzel & Bedienhinweise">
+            <mat-icon>info_outline</mat-icon>
+          </button>
+
+          <mat-menu #shortcutsMenu="matMenu" class="shortcuts-menu-panel" xPosition="before">
+            <div class="shortcuts-panel-content" (click)="$event.stopPropagation()">
+              <div class="shortcuts-section-title">
+                <mat-icon>keyboard</mat-icon>
+                <span>Tastaturnavigation & Shortcuts</span>
+              </div>
+              <div class="shortcuts-list">
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></span>
+                  <span class="shortcut-desc">Nächste / vorherige Spalte wechseln</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>Enter</kbd></span>
+                  <span class="shortcut-desc">Nächster Tag (gleiche Spalte)</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>{{ isMac ? '⌘+D' : 'Ctrl+D' }}</kbd></span>
+                  <span class="shortcut-desc">Vortag kopieren (Beginn, Ende, Pause)</span>
+                </div>
+              </div>
+
+              <div class="shortcuts-divider"></div>
+
+              <div class="shortcuts-section-title">
+                <mat-icon>schedule</mat-icon>
+                <span>Schnelle Zeiteingabe</span>
+              </div>
+              <div class="shortcuts-list">
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>8</kbd> / <kbd>830</kbd> / <kbd>8.5</kbd></span>
+                  <span class="shortcut-desc">Wird automatisch zu <code>08:00</code> / <code>08:30</code> formatiert</span>
+                </div>
+              </div>
+            </div>
+          </mat-menu>
         </div>
       </div>
 
@@ -234,27 +277,111 @@ import { DateUtils } from '../../utils/date-utils';
       color: #0ca678;
     }
 
-    .shortcut-hints {
+    .header-actions {
       margin-left: auto;
       display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-shortcuts-btn {
+      color: #868e96;
+      transition: color 0.15s, background-color 0.15s;
+
+      &:hover {
+        color: #0ca678;
+        background-color: rgba(12, 166, 120, 0.08);
+      }
+    }
+
+    ::ng-deep .shortcuts-menu-panel {
+      max-width: 440px !important;
+      padding: 0 !important;
+      border-radius: 8px !important;
+    }
+
+    .shortcuts-panel-content {
+      padding: 14px 16px;
+      min-width: 330px;
+      max-width: 420px;
+      font-size: 13px;
+      color: #343a40;
+      line-height: 1.4;
+      cursor: default;
+      user-select: text;
+    }
+
+    .shortcuts-section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #495057;
+      margin-bottom: 8px;
+
+      mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        color: #0ca678;
+      }
+    }
+
+    .shortcuts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
 
-    .hint-tag {
-      font-size: 11px;
-      color: #868e96;
-      display: flex;
+    .shortcut-keys {
+      flex-shrink: 0;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #495057;
 
       kbd {
-        background: #e9ecef;
+        background: #f1f3f5;
         padding: 2px 5px;
         border-radius: 4px;
         border: 1px solid #ced4da;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
         font-family: monospace;
-        color: #495057;
+        font-size: 11px;
+        color: #212529;
       }
+    }
+
+    .shortcut-desc {
+      font-size: 12px;
+      color: #495057;
+      text-align: right;
+
+      code {
+        background: #e9ecef;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-family: monospace;
+      }
+    }
+
+    .shortcuts-divider {
+      height: 1px;
+      background: #dee2e6;
+      margin: 12px 0 10px 0;
     }
 
     .table-scroll-wrapper {
@@ -553,6 +680,7 @@ import { DateUtils } from '../../utils/date-utils';
 export class WorkHoursEditorComponent {
   readonly state = inject(TimesheetStateService);
   readonly DayStatus = DayStatus;
+  readonly isMac = typeof navigator !== 'undefined' && (/Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Macintosh/.test(navigator.userAgent));
 
   formatHours(hours: number | undefined): string {
     return hours != null ? hours.toFixed(2) : '0.00';

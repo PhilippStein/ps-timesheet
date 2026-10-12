@@ -48,9 +48,67 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
           <mat-icon>view_column</mat-icon> Aufgaben anpassen ({{ state.activeMonthData()?.taskColumns?.length || 0 }})
         </button>
 
-        <div class="shortcut-hints">
-          <span class="hint-tag"><kbd>Ctrl+D</kbd> Vortag kopieren</span>
-          <span class="hint-tag"><kbd>Enter</kbd> Nächster Tag / Zeile</span>
+        <div class="header-actions">
+          <button
+            mat-icon-button
+            class="info-shortcuts-btn"
+            [matMenuTriggerFor]="shortcutsMenu"
+            matTooltip="Tastaturkürzel & Bedienhinweise"
+            aria-label="Tastaturkürzel & Bedienhinweise">
+            <mat-icon>info_outline</mat-icon>
+          </button>
+
+          <mat-menu #shortcutsMenu="matMenu" class="shortcuts-menu-panel" xPosition="before">
+            <div class="shortcuts-panel-content" (click)="$event.stopPropagation()">
+              <div class="shortcuts-section-title">
+                <mat-icon>keyboard</mat-icon>
+                <span>Tastaturnavigation & Shortcuts</span>
+              </div>
+              <div class="shortcuts-list">
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>Tab</kbd> / <kbd>Shift+Tab</kbd></span>
+                  <span class="shortcut-desc">Nächste / vorherige Zelle wechseln</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>Enter</kbd></span>
+                  <span class="shortcut-desc">Nächster Tag (gleiche Spalte) / Notiz hinzufügen</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>{{ isMac ? '⌘+D' : 'Ctrl+D' }}</kbd></span>
+                  <span class="shortcut-desc">Vortag in Zeile kopieren</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>Escape</kbd></span>
+                  <span class="shortcut-desc">Notiz-Bearbeitung abbrechen</span>
+                </div>
+              </div>
+
+              <div class="shortcuts-divider"></div>
+
+              <div class="shortcuts-section-title">
+                <mat-icon>touch_app</mat-icon>
+                <span>Tätigkeiten & Drag & Drop</span>
+              </div>
+              <div class="shortcuts-list">
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><mat-icon class="inline-icon">drag_indicator</mat-icon> Drag & Drop</span>
+                  <span class="shortcut-desc">Tätigkeit verschieben</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><kbd>{{ isMac ? '⌥ Option' : 'Strg / Alt' }}</kbd> + Drag</span>
+                  <span class="shortcut-desc">Tätigkeit kopieren (<strong>+</strong>)</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys">Doppelklick</span>
+                  <span class="shortcut-desc">Tätigkeit inline bearbeiten</span>
+                </div>
+                <div class="shortcut-row">
+                  <span class="shortcut-keys"><mat-icon class="inline-icon">playlist_add</mat-icon> Vorlagen</span>
+                  <span class="shortcut-desc">Vordefinierte Vorlagen einfügen</span>
+                </div>
+              </div>
+            </div>
+          </mat-menu>
         </div>
       </div>
 
@@ -346,27 +404,122 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       font-size: 12px;
     }
 
-    .shortcut-hints {
+    .header-actions {
       margin-left: auto;
       display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-shortcuts-btn {
+      color: #868e96;
+      transition: color 0.15s, background-color 0.15s;
+
+      &:hover {
+        color: #1971c2;
+        background-color: rgba(25, 113, 194, 0.08);
+      }
+    }
+
+    ::ng-deep .shortcuts-menu-panel {
+      max-width: 440px !important;
+      padding: 0 !important;
+      border-radius: 8px !important;
+    }
+
+    .shortcuts-panel-content {
+      padding: 14px 16px;
+      min-width: 330px;
+      max-width: 420px;
+      font-size: 13px;
+      color: #343a40;
+      line-height: 1.4;
+      cursor: default;
+      user-select: text;
+    }
+
+    .shortcuts-section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #495057;
+      margin-bottom: 8px;
+
+      mat-icon {
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        color: #1971c2;
+      }
+    }
+
+    .shortcuts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
     }
 
-    .hint-tag {
-      font-size: 11px;
-      color: #868e96;
-      display: flex;
+    .shortcut-keys {
+      flex-shrink: 0;
+      display: inline-flex;
       align-items: center;
       gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #495057;
 
       kbd {
-        background: #e9ecef;
+        background: #f1f3f5;
         padding: 2px 5px;
         border-radius: 4px;
         border: 1px solid #ced4da;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
         font-family: monospace;
+        font-size: 11px;
+        color: #212529;
+      }
+
+      .inline-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
         color: #495057;
       }
+    }
+
+    .shortcut-desc {
+      font-size: 12px;
+      color: #495057;
+      text-align: right;
+
+      strong {
+        color: #2b8a3e;
+      }
+
+      code {
+        background: #e9ecef;
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-family: monospace;
+      }
+    }
+
+    .shortcuts-divider {
+      height: 1px;
+      background: #dee2e6;
+      margin: 12px 0 10px 0;
     }
 
     .table-scroll-wrapper {
@@ -937,6 +1090,7 @@ export class PersonDaysEditorComponent {
   readonly state = inject(TimesheetStateService);
   private readonly dialog = inject(MatDialog);
   readonly DayStatus = DayStatus;
+  readonly isMac = typeof navigator !== 'undefined' && (/Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Macintosh/.test(navigator.userAgent));
 
   editingNote: { dayDate: string; index: number; text: string } | null = null;
   isDraggingNote = false;
@@ -965,8 +1119,7 @@ export class PersonDaysEditorComponent {
   }
 
   updateCopyModifierState(event: KeyboardEvent | MouseEvent) {
-    const isMac = typeof navigator !== 'undefined' && (/Mac|iPod|iPhone|iPad/.test(navigator.platform) || /Macintosh/.test(navigator.userAgent));
-    if (isMac) {
+    if (this.isMac) {
       this.isCopyModifierActive = !!event.altKey;
     } else {
       this.isCopyModifierActive = !!(event.ctrlKey || event.altKey);
