@@ -145,7 +145,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                 <!-- ADDITIVE DAILY NOTES CHIPS & TEMPLATES -->
                 <td class="col-notes">
                   <div class="notes-cell-container">
-                    <div class="notes-chips-list" cdkDropList cdkDropListOrientation="mixed" [cdkDropListData]="{ day: day, list: getNotesList(day) }" (cdkDropListDropped)="dropNote(day, $event)">
+                    <div class="notes-chips-list" cdkDropList cdkDropListOrientation="vertical" [cdkDropListData]="{ day: day, list: getNotesList(day) }" (cdkDropListDropped)="dropNote(day, $event)">
                       @for (note of getNotesList(day); track $index; let noteIndex = $index) {
                         @if (isEditingNote(day, noteIndex)) {
                           <span class="note-chip note-chip-editing">
@@ -184,14 +184,18 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                       }
                     </div>
 
-                    @for (suggestion of getRecurringSuggestions(day); track suggestion) {
-                      <button
-                        type="button"
-                        class="note-suggestion-btn"
-                        (click)="addNote(day, suggestion)"
-                        [title]="'+ ' + suggestion + ' hinzufügen'">
-                        <mat-icon>add</mat-icon> {{ suggestion }}
-                      </button>
+                    @if (getRecurringSuggestions(day).length > 0) {
+                      <div class="notes-suggestions-row">
+                        @for (suggestion of getRecurringSuggestions(day); track suggestion) {
+                          <button
+                            type="button"
+                            class="note-suggestion-btn"
+                            (click)="addNote(day, suggestion)"
+                            [title]="'+ ' + suggestion + ' hinzufügen'">
+                            <mat-icon>add</mat-icon> {{ suggestion }}
+                          </button>
+                        }
+                      </div>
                     }
 
                     <div class="notes-input-wrapper">
@@ -564,15 +568,24 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
 
     .notes-cell-container {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
       gap: 4px;
       min-height: 28px;
-      padding: 2px 0;
+      padding: 4px 0;
+      width: 100%;
     }
 
     .notes-chips-list {
-      display: inline-flex;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .notes-suggestions-row {
+      display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 4px;
@@ -598,6 +611,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
         border-color: #339af0;
         padding: 1px 4px;
         box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+        width: 100%;
       }
     }
 
@@ -610,8 +624,8 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       color: #1971c2;
       font-weight: 500;
       padding: 1px 2px;
+      width: 100%;
       min-width: 90px;
-      max-width: 280px;
     }
 
     .chip-drag-handle {
