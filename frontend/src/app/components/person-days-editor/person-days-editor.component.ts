@@ -724,6 +724,11 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       box-sizing: border-box;
       transition: border-color 0.15s, background-color 0.15s;
 
+      &::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+      }
+
       &:hover {
         border-color: #ced4da;
         background: #ffffff;
@@ -1194,6 +1199,15 @@ export class PersonDaysEditorComponent {
 
   setLocation(day: TimesheetDay, value: string | null) {
     day.location = value ? value : null;
+    if (day.location === 'Urlaub') {
+      day.status = DayStatus.URLAUB;
+    } else if (day.location === 'Krank') {
+      day.status = DayStatus.KRANK;
+    } else if (day.location === 'Feiertag') {
+      day.status = DayStatus.FEIERTAG;
+    } else if (day.location === 'Remote' || day.location === 'Vor-Ort') {
+      day.status = null;
+    }
     this.triggerUpdate();
   }
 

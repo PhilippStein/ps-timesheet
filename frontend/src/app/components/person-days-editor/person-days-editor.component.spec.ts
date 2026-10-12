@@ -404,12 +404,39 @@ describe('PersonDaysEditorComponent', () => {
     // Initially no location
     expect(day.location).toBeUndefined();
 
-    // Set location manually
+    // Set location manually to Remote / Vor-Ort -> status should be null (Regulär)
     component.setLocation(day, 'Remote');
     expect(day.location).toBe('Remote');
+    expect(day.status).toBeNull();
 
     component.setLocation(day, 'Vor-Ort');
     expect(day.location).toBe('Vor-Ort');
+    expect(day.status).toBeNull();
+
+    // Setting location to Urlaub should set status to Urlaub
+    component.setLocation(day, 'Urlaub');
+    expect(day.location).toBe('Urlaub');
+    expect(day.status).toBe(DayStatus.URLAUB);
+
+    // Setting location to Krank should set status to Krank
+    component.setLocation(day, 'Krank');
+    expect(day.location).toBe('Krank');
+    expect(day.status).toBe(DayStatus.KRANK);
+
+    // Setting location to Feiertag should set status to Feiertag
+    component.setLocation(day, 'Feiertag');
+    expect(day.location).toBe('Feiertag');
+    expect(day.status).toBe(DayStatus.FEIERTAG);
+
+    // Setting location back to Remote or Vor-Ort should reset status to Regulär (null)
+    component.setLocation(day, 'Remote');
+    expect(day.location).toBe('Remote');
+    expect(day.status).toBeNull();
+
+    component.setLocation(day, 'Urlaub');
+    component.setLocation(day, 'Vor-Ort');
+    expect(day.location).toBe('Vor-Ort');
+    expect(day.status).toBeNull();
 
     // Changing status to Urlaub should set location to Urlaub
     component.setStatus(day, DayStatus.URLAUB);

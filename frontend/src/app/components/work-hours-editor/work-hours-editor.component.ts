@@ -588,6 +588,11 @@ import { DateUtils } from '../../utils/date-utils';
       box-sizing: border-box;
       transition: border-color 0.15s, background-color 0.15s;
 
+      &::placeholder {
+        color: #adb5bd;
+        opacity: 1;
+      }
+
       &:hover {
         border-color: #ced4da;
         background: #ffffff;
@@ -598,6 +603,13 @@ import { DateUtils } from '../../utils/date-utils';
         border-color: #339af0;
         background: #ffffff;
         box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.2);
+      }
+    }
+
+    .comment-input {
+      &::placeholder {
+        color: #adb5bd;
+        font-style: italic;
       }
     }
 
