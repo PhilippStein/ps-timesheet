@@ -193,4 +193,88 @@ describe('WorkHoursEditorComponent', () => {
     });
     expect(component.hasHourlyRate()).toBe(false);
   });
+
+  it('should identify end of week on Sundays and on the last day of the month', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 0 },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0 },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, netHours: 8 }
+      ]
+    });
+
+    // Thursday (0), Friday (1), Saturday (2) are not end of week
+    expect(component.isEndOfWeek(0)).toBe(false);
+    expect(component.isEndOfWeek(1)).toBe(false);
+    expect(component.isEndOfWeek(2)).toBe(false);
+
+    // Sunday (3) is end of week
+    expect(component.isEndOfWeek(3)).toBe(true);
+
+    // Monday (4) is not end of week
+    expect(component.isEndOfWeek(4)).toBe(false);
+
+    // Tuesday (5) is the last day of the month in this dataset, so it is end of week
+    expect(component.isEndOfWeek(5)).toBe(true);
+  });
+
+  it('should calculate weekly net hours correctly for each week', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, netHours: 7.5 },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 2 },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0 },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-06', dayOfWeek: 'Dienstag', isWeekend: false, netHours: 4 }
+      ]
+    });
+
+    // Week 1 (Oct 1 - Oct 4): 8 + 7.5 + 2 + 0 = 17.5 hours
+    expect(component.getWeekNetHours(3)).toBe(17.5);
+
+    // Week 2 (Oct 5 - Oct 6, last day): 8 + 4 = 12 hours
+    expect(component.getWeekNetHours(5)).toBe(12);
+  });
+
+  it('should render weekly summary rows in the table with correct sums', () => {
+    stateService.activeMonthData.set({
+      projectName: 'Test',
+      year: 2026,
+      month: 10,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: [
+        { date: '2026-10-01', dayOfWeek: 'Donnerstag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-02', dayOfWeek: 'Freitag', isWeekend: false, netHours: 8 },
+        { date: '2026-10-03', dayOfWeek: 'Samstag', isWeekend: true, netHours: 0 },
+        { date: '2026-10-04', dayOfWeek: 'Sonntag', isWeekend: true, netHours: 0 },
+        { date: '2026-10-05', dayOfWeek: 'Montag', isWeekend: false, netHours: 6 }
+      ]
+    });
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const weekSummaryRows = compiled.querySelectorAll('.week-summary-row');
+    expect(weekSummaryRows.length).toBe(2); // One after Sunday (Oct 4), one after last day (Oct 5)
+
+    const firstSummaryValue = weekSummaryRows[0].querySelector('.week-summary-value')?.textContent?.trim();
+    expect(firstSummaryValue).toBe('16.00 h');
+
+    const secondSummaryValue = weekSummaryRows[1].querySelector('.week-summary-value')?.textContent?.trim();
+    expect(secondSummaryValue).toBe('6.00 h');
+  });
 });

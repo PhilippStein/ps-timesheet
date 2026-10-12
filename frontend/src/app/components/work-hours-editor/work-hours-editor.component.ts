@@ -219,6 +219,15 @@ import { DateUtils } from '../../utils/date-utils';
                   </div>
                 </td>
               </tr>
+              @if (isEndOfWeek(rowIndex)) {
+                <tr class="week-summary-row">
+                  <td colspan="5" class="week-summary-label">Summe</td>
+                  <td class="col-net font-mono week-summary-value">
+                    {{ formatHours(getWeekNetHours(rowIndex)) }} h
+                  </td>
+                  <td colspan="2"></td>
+                </tr>
+              }
             }
           </tbody>
           <tfoot>
@@ -632,6 +641,31 @@ import { DateUtils } from '../../utils/date-utils';
       }
     }
 
+    .week-summary-row {
+      background-color: #f1f3f5;
+      font-weight: 700;
+      border-top: 1px solid #dee2e6;
+      border-bottom: 2px solid #dee2e6;
+
+      td {
+        background-color: #f1f3f5;
+        padding: 5px 8px;
+      }
+
+      .week-summary-label {
+        font-weight: 700;
+        color: #495057;
+        padding-left: 12px;
+      }
+
+      .week-summary-value {
+        font-weight: 700;
+        color: #0ca678;
+        font-size: 13px;
+        text-align: right;
+      }
+    }
+
     .totals-row {
       background: #f1f3f5;
       font-weight: 700;
@@ -721,6 +755,52 @@ export class WorkHoursEditorComponent {
 
   isWeekend(day: TimesheetDay): boolean {
     return !!(day.isWeekend || day.weekend || day.dayOfWeek === 'Samstag' || day.dayOfWeek === 'Sonntag' || day.dayOfWeek === 'Saturday' || day.dayOfWeek === 'Sunday');
+  }
+
+  isSunday(day: TimesheetDay): boolean {
+    if (!day) return false;
+    if (day.dayOfWeek === 'Sonntag' || day.dayOfWeek === 'Sunday' || day.dayOfWeek === 'So' || day.dayOfWeek === 'Sun') {
+      return true;
+    }
+    if (day.date) {
+      const d = new Date(day.date + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        return d.getDay() === 0;
+      }
+    }
+    return false;
+  }
+
+  isEndOfWeek(rowIndex: number): boolean {
+    const days = this.state.activeMonthData()?.days;
+    if (!days || rowIndex < 0 || rowIndex >= days.length) {
+      return false;
+    }
+    const day = days[rowIndex];
+    const isSunday = this.isSunday(day);
+    const isLastDay = rowIndex === days.length - 1;
+    return isSunday || isLastDay;
+  }
+
+  getWeekNetHours(endRowIndex: number): number {
+    const days = this.state.activeMonthData()?.days;
+    if (!days || endRowIndex < 0 || endRowIndex >= days.length) {
+      return 0;
+    }
+
+    let total = 0;
+    for (let i = endRowIndex; i >= 0; i--) {
+      const day = days[i];
+      if (i !== endRowIndex) {
+        if (this.isSunday(day) || DateUtils.isDifferentWeek(day.date, days[endRowIndex].date)) {
+          break;
+        }
+      }
+      if (day.netHours != null && day.netHours > 0) {
+        total += day.netHours;
+      }
+    }
+    return total;
   }
 
   isVacation(day: TimesheetDay): boolean {
