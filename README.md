@@ -166,3 +166,9 @@ mvn test
 cd frontend
 npm test -- --watch=false
 ```
+
+---
+
+## Lizenz
+
+Dieses Projekt steht unter der [MIT-Lizenz](LICENSE).
