@@ -155,6 +155,10 @@ export class TimesheetStateService {
   private updateSelectedProjectFromList(projs: ProjectConfig[]) {
     if (!projs || projs.length === 0) {
       this.selectedProject.set(null);
+      this.tree.set(null);
+      this.activeMonthData.set(null);
+      this.selectedYear.set(null);
+      this.selectedMonth.set(null);
       return;
     }
     const current = this.selectedProject();

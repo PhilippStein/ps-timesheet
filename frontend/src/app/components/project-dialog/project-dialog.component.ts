@@ -17,6 +17,8 @@ export interface ProjectDialogData {
   isEdit: boolean;
 }
 
+export type ProjectDialogResult = ProjectConfig | { delete: true; projectName: string };
+
 @Component({
   selector: 'app-project-dialog',
   standalone: true,
@@ -150,6 +152,42 @@ export interface ProjectDialogData {
             <textarea matInput [(ngModel)]="pdfFooterText" rows="3" placeholder="z.B. Leistung wie vereinbart erbracht. Zahlbar rein netto..."></textarea>
           </mat-form-field>
         </div>
+
+        @if (data.isEdit) {
+          <div class="danger-section">
+            <div class="danger-header">
+              <mat-icon class="danger-icon">warning_amber</mat-icon>
+              <span class="danger-title">Projektkonfiguration löschen</span>
+            </div>
+            <div class="danger-info-box">
+              <p class="danger-info-text">
+                Beim Löschen wird ausschließlich die Konfiguration des Projekts entfernt. Sämtliche Zeiterfassungsdateien auf der Festplatte (unter <code>{{ basePath }}</code>) bleiben vollständig erhalten.
+              </p>
+              <p class="danger-info-subtext">
+                <mat-icon class="inline-info-icon">info</mat-icon>
+                <span>Hinweis: Einzelne Jahre und Monate können Sie bei Bedarf direkt über Ihren Dateimanager im Dateisystem löschen.</span>
+              </p>
+            </div>
+
+            @if (!showDeleteConfirm) {
+              <button mat-stroked-button color="warn" type="button" class="delete-trigger-btn" (click)="showDeleteConfirm = true">
+                <mat-icon>delete_outline</mat-icon> Projekt aus Konfiguration löschen
+              </button>
+            } @else {
+              <div class="delete-confirm-panel">
+                <span class="confirm-msg">Projekt <strong>"{{ name }}"</strong> wirklich aus der Konfiguration entfernen?</span>
+                <div class="confirm-actions">
+                  <button mat-flat-button color="warn" type="button" (click)="confirmDelete()">
+                    Ja, Projekt löschen
+                  </button>
+                  <button mat-button type="button" (click)="showDeleteConfirm = false">
+                    Abbrechen
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
@@ -252,6 +290,94 @@ export interface ProjectDialogData {
       align-self: flex-start;
       margin-top: 6px;
     }
+    .danger-section {
+      margin-top: 8px;
+      padding: 14px 16px;
+      background: #fff5f5;
+      border: 1px solid #ffc9c9;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .danger-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #c92a2a;
+    }
+    .danger-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: #e03131;
+    }
+    .danger-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .danger-info-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+      color: #495057;
+      line-height: 1.4;
+
+      code {
+        background: #ffe3e3;
+        color: #c92a2a;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+    }
+    .danger-info-text {
+      margin: 0;
+    }
+    .danger-info-subtext {
+      margin: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 12px;
+      color: #495057;
+      background: rgba(25, 113, 194, 0.08);
+      padding: 8px 10px;
+      border-radius: 6px;
+      border-left: 3px solid #1971c2;
+
+      .inline-info-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        margin-top: 1px;
+        color: #1971c2;
+        flex-shrink: 0;
+      }
+    }
+    .delete-trigger-btn {
+      align-self: flex-start;
+    }
+    .delete-confirm-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #ffffff;
+      border: 1px solid #ffa8a8;
+      border-radius: 6px;
+    }
+    .confirm-msg {
+      font-size: 13px;
+      color: #c92a2a;
+    }
+    .confirm-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
   `]
 })
 export class ProjectDialogComponent {
@@ -278,6 +404,12 @@ export class ProjectDialogComponent {
   recurringNotes: RecurringNoteConfig[] = this.data.project?.recurringNotes
     ? this.data.project.recurringNotes.map(r => ({ text: r.text, days: [...(r.days || [])] }))
     : [];
+
+  showDeleteConfirm = false;
+
+  confirmDelete() {
+    this.dialogRef.close({ delete: true, projectName: this.name.trim() });
+  }
 
   addTask() {
     this.defaultTasks.push(`Aufgabe ${this.defaultTasks.length + 1}`);

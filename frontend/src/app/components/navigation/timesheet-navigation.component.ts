@@ -7,7 +7,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
 import { ProjectConfig, MonthNodeDTO, YearNodeDTO } from '../../models/project.model';
-import { ProjectDialogComponent } from '../project-dialog/project-dialog.component';
+import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/project-dialog.component';
 
 @Component({
   selector: 'app-timesheet-navigation',
@@ -442,19 +442,33 @@ export class TimesheetNavigationComponent {
       data: { project, isEdit: true }
     });
 
-    dialogRef.afterClosed().subscribe((res: ProjectConfig | undefined) => {
-      if (res) {
-        this.api.saveProject(res).subscribe({
-          next: (savedProject) => {
-            const updated = savedProject || res;
-            const current = this.state.selectedProject();
-            if (current && (current.name.toLowerCase() === project.name.toLowerCase() || current.name.toLowerCase() === res.name.toLowerCase())) {
-              this.state.selectedProject.set(updated);
-            }
+    dialogRef.afterClosed().subscribe((res: ProjectDialogResult | undefined) => {
+      if (!res) return;
+
+      if ('delete' in res && res.delete) {
+        this.api.deleteProject(res.projectName).subscribe({
+          next: () => {
             this.state.loadConfig();
+          },
+          error: (err) => {
+            console.error('Failed to delete project', err);
+            this.state.errorMessage.set('Projekt konnte nicht gelöscht werden.');
           }
         });
+        return;
       }
+
+      const projectConfig = res as ProjectConfig;
+      this.api.saveProject(projectConfig).subscribe({
+        next: (savedProject) => {
+          const updated = savedProject || projectConfig;
+          const current = this.state.selectedProject();
+          if (current && (current.name.toLowerCase() === project.name.toLowerCase() || current.name.toLowerCase() === projectConfig.name.toLowerCase())) {
+            this.state.selectedProject.set(updated);
+          }
+          this.state.loadConfig();
+        }
+      });
     });
   }
 

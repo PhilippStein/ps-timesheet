@@ -89,4 +89,14 @@ describe('ProjectDialogComponent', () => {
       { text: 'Rec 1', days: ['Montag'] }
     ]);
   });
+
+  it('should confirm delete and close dialog with delete payload in edit mode', () => {
+    component.name = 'ProjectToDelete';
+    component.confirmDelete();
+
+    expect(dialogRefSpy.close).toHaveBeenCalledWith({
+      delete: true,
+      projectName: 'ProjectToDelete'
+    });
+  });
 });
