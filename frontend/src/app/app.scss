@@ -77,9 +77,10 @@
 }
 
 .brand-icon {
-  font-size: 22px;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .app-title {
