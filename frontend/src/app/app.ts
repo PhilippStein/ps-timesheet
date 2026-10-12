@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { TimesheetNavigationComponent } from './components/navigation/timesheet-navigation.component';
 import { WorkHoursEditorComponent } from './components/work-hours-editor/work-hours-editor.component';
 import { PersonDaysEditorComponent } from './components/person-days-editor/person-days-editor.component';
+import { ProjectStatsComponent } from './components/project-stats/project-stats.component';
 import { SettingsDialogComponent } from './components/settings-dialog/settings-dialog.component';
 import { TimesheetStateService } from './services/timesheet-state.service';
 import { DateUtils } from './utils/date-utils';
@@ -26,7 +27,8 @@ import { DateUtils } from './utils/date-utils';
     MatDialogModule,
     TimesheetNavigationComponent,
     WorkHoursEditorComponent,
-    PersonDaysEditorComponent
+    PersonDaysEditorComponent,
+    ProjectStatsComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss'

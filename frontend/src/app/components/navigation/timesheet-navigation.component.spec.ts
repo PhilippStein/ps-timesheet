@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { TimesheetNavigationComponent } from './timesheet-navigation.component';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
 import { of } from 'rxjs';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { MatDialog } from '@angular/material/dialog';
+import { MatTooltip } from '@angular/material/tooltip';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('TimesheetNavigationComponent', () => {
@@ -23,7 +25,8 @@ describe('TimesheetNavigationComponent', () => {
       saveProject: vi.fn().mockReturnValue(of({ name: 'UpdatedProj', basePath: '/tmp/test', template: 'WorkHours' })),
       deleteProject: vi.fn().mockReturnValue(of(undefined)),
       getConfig: vi.fn().mockReturnValue(of({ projects: [{ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' }] })),
-      downloadPdf: vi.fn().mockReturnValue(of(new Blob(['pdf content'], { type: 'application/pdf' })))
+      downloadPdf: vi.fn().mockReturnValue(of(new Blob(['pdf content'], { type: 'application/pdf' }))),
+      getProjectStats: vi.fn().mockReturnValue(of(null))
     };
 
     await TestBed.configureTestingModule({
@@ -99,5 +102,43 @@ describe('TimesheetNavigationComponent', () => {
     expect(openSpy).toHaveBeenCalled();
     expect(api.deleteProject).toHaveBeenCalledWith('ToDelete');
     expect(loadConfigSpy).toHaveBeenCalled();
+  });
+
+  it('should disable year stats button when no year is selected or project-stats is active', () => {
+    state.selectedProject.set({ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' });
+    state.selectedYear.set(null);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const footerButtons = compiled.querySelectorAll('.footer-stats-btn') as NodeListOf<HTMLButtonElement>;
+    const yearStatsBtn = footerButtons[1];
+
+    expect(yearStatsBtn.disabled).toBe(true);
+
+    const wrappers = fixture.debugElement.queryAll(By.css('.footer-stats-btn-wrapper'));
+    const yearWrapperTooltip = wrappers[1].injector.get(MatTooltip);
+    expect(yearWrapperTooltip.message).toBe('Bitte zuerst ein Jahr auswählen');
+  });
+
+  it('should switch to year and project stats views when footer buttons are clicked', () => {
+    state.selectedProject.set({ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' });
+    state.selectedYear.set(2026);
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const footerButtons = compiled.querySelectorAll('.footer-stats-btn') as NodeListOf<HTMLButtonElement>;
+    expect(footerButtons.length).toBe(2);
+
+    const projectStatsBtn = footerButtons[0];
+    const yearStatsBtn = footerButtons[1];
+
+    const showProjectStatsSpy = vi.spyOn(state, 'showProjectStats');
+    const showYearStatsSpy = vi.spyOn(state, 'showYearStats');
+
+    projectStatsBtn.click();
+    expect(showProjectStatsSpy).toHaveBeenCalled();
+
+    yearStatsBtn.click();
+    expect(showYearStatsSpy).toHaveBeenCalled();
   });
 });

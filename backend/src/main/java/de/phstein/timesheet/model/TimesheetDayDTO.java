@@ -195,14 +195,29 @@ public class TimesheetDayDTO {
         return sb.length() > 0 ? sb.toString() : null;
     }
 
+    public boolean isVacation() {
+        if (status == DayStatus.URLAUB) {
+            return true;
+        }
+        return location != null && location.equalsIgnoreCase("Urlaub");
+    }
+
+    public boolean isSick() {
+        if (status == DayStatus.KRANK) {
+            return true;
+        }
+        return location != null && location.equalsIgnoreCase("Krank");
+    }
+
+    public boolean isHoliday() {
+        if (status == DayStatus.FEIERTAG) {
+            return true;
+        }
+        return location != null && location.equalsIgnoreCase("Feiertag");
+    }
+
     public boolean isVacationOrSick() {
-        if (status == DayStatus.URLAUB || status == DayStatus.KRANK || status == DayStatus.FEIERTAG) {
-            return true;
-        }
-        if (location != null && (location.equalsIgnoreCase("Urlaub") || location.equalsIgnoreCase("Krank") || location.equalsIgnoreCase("Feiertag"))) {
-            return true;
-        }
-        return false;
+        return isVacation() || isSick() || isHoliday();
     }
 
     public boolean isWeekendDay() {

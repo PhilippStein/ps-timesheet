@@ -145,6 +145,23 @@ public class TimesheetStorageService {
         return handler.readMonth(csvPath, project.getName(), year, month);
     }
 
+    public synchronized TimesheetMonthDTO loadMonthForStats(ProjectConfig project, int year, int month) {
+        Path csvPath = resolveCsvPath(project, year, month);
+        TimesheetTemplateHandler handler = getHandler(project.getTemplate());
+
+        if (Files.exists(csvPath)) {
+            return handler.readMonth(csvPath, project.getName(), year, month);
+        }
+
+        Path yearDir = csvPath.getParent();
+        Path existingCsv = findExistingCsvForMonth(yearDir, year, month);
+        if (existingCsv != null && Files.exists(existingCsv)) {
+            return handler.readMonth(existingCsv, project.getName(), year, month);
+        }
+
+        return handler.createEmptyMonth(project.getName(), year, month, project.getDefaultTasks());
+    }
+
     public synchronized TimesheetMonthDTO saveMonth(ProjectConfig project, int year, int month, TimesheetMonthDTO monthData) {
         Path csvPath = resolveCsvPath(project, year, month);
         TimesheetTemplateHandler handler = getHandler(project.getTemplate());

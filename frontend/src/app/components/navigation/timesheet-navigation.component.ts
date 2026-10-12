@@ -96,7 +96,21 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
             }
           </div>
 
-          <footer class="column-footer"></footer>
+          <footer class="column-footer">
+            <div
+              class="footer-stats-btn-wrapper"
+              [matTooltip]="!state.selectedProject() ? 'Bitte zuerst ein Projekt auswählen' : 'Gesamtübersicht über alle Jahre'">
+              <button
+                mat-button
+                class="footer-stats-btn"
+                [class.active]="state.activeView() === 'project-stats'"
+                [disabled]="!state.selectedProject()"
+                (click)="openProjectStats()">
+                <mat-icon>bar_chart</mat-icon>
+                <span>Gesamtübersicht</span>
+              </button>
+            </div>
+          </footer>
         </section>
 
         <!-- COLUMN 3: MONTHS -->
@@ -112,7 +126,7 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
             @for (monthNode of state.availableMonths(); track monthNode.month) {
               <div
                 class="nav-item month-item"
-                [class.active]="state.selectedMonth() === monthNode.month"
+                [class.active]="state.activeView() === 'month-editor' && state.selectedMonth() === monthNode.month"
                 (click)="selectMonth(monthNode.month)">
                 <div class="item-content">
                   <span class="item-title">{{ formatMonthNumber(monthNode.month) }} - {{ monthNode.monthName }}</span>
@@ -136,7 +150,21 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
             }
           </div>
 
-          <footer class="column-footer"></footer>
+          <footer class="column-footer">
+            <div
+              class="footer-stats-btn-wrapper"
+              [matTooltip]="!state.selectedYear() ? 'Bitte zuerst ein Jahr auswählen' : 'Jahresübersicht für das ausgewählte Jahr'">
+              <button
+                mat-button
+                class="footer-stats-btn"
+                [class.active]="state.activeView() === 'year-stats'"
+                [disabled]="!state.selectedProject() || !state.selectedYear()"
+                (click)="openYearStats()">
+                <mat-icon>bar_chart</mat-icon>
+                <span>Jahresübersicht</span>
+              </button>
+            </div>
+          </footer>
         </section>
       } @else {
         <!-- COLLAPSED STRIP -->
@@ -193,11 +221,67 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
     .column-footer {
       display: flex;
       align-items: center;
-      padding: 4px 8px;
+      padding: 4px 6px;
       border-top: 1px solid #dee2e6;
       background: #f8f9fa;
       height: 40px;
       box-sizing: border-box;
+    }
+
+    .footer-stats-btn-wrapper {
+      width: 100%;
+      display: flex;
+    }
+
+    .footer-stats-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      height: 32px;
+      line-height: 32px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #495057;
+      padding: 0 6px;
+      border-radius: 4px;
+      justify-content: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: #1971c2;
+      }
+
+      &:hover:not([disabled]):not(:disabled) {
+        background: #e9ecef;
+        color: #1971c2;
+      }
+
+      &:disabled,
+      &[disabled] {
+        opacity: 0.45;
+        color: #adb5bd !important;
+        cursor: not-allowed;
+
+        mat-icon {
+          color: #adb5bd !important;
+        }
+      }
+
+      &.active {
+        background: #d0ebff;
+        color: #1864ab;
+        font-weight: 600;
+
+        mat-icon {
+          color: #1864ab;
+        }
+      }
     }
 
     .collapse-toggle-btn {
@@ -486,5 +570,13 @@ export class TimesheetNavigationComponent {
   goToCurrentMonth() {
     const currentMonth = new Date().getMonth() + 1;
     this.state.selectMonth(currentMonth);
+  }
+
+  openProjectStats() {
+    this.state.showProjectStats();
+  }
+
+  openYearStats() {
+    this.state.showYearStats();
   }
 }

@@ -2,8 +2,10 @@ package de.phstein.timesheet.rest;
 
 import de.phstein.timesheet.config.AppConfigService;
 import de.phstein.timesheet.config.ProjectConfig;
+import de.phstein.timesheet.model.ProjectStatsDTO;
 import de.phstein.timesheet.model.ProjectTreeDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
+import de.phstein.timesheet.service.TimesheetStatsService;
 import de.phstein.timesheet.service.TimesheetStorageService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
@@ -12,6 +14,7 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -28,6 +31,26 @@ public class TimesheetResource {
 
     @Inject
     TimesheetStorageService storageService;
+
+    @Inject
+    TimesheetStatsService statsService;
+
+    @GET
+    @Path("/{project}/stats")
+    public Response getProjectStats(
+            @PathParam("project") String projectName,
+            @QueryParam("year") Integer year) {
+
+        Optional<ProjectConfig> projectOpt = appConfigService.getProject(projectName);
+        if (projectOpt.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of("error", "Project not found: " + projectName))
+                    .build();
+        }
+
+        ProjectStatsDTO stats = statsService.getProjectStats(projectOpt.get(), year);
+        return Response.ok(stats).build();
+    }
 
     @GET
     @Path("/{project}/tree")

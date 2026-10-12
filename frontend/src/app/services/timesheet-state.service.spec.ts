@@ -15,6 +15,7 @@ describe('TimesheetStateService', () => {
     getProjectTree: ReturnType<typeof vi.fn>;
     getMonth: ReturnType<typeof vi.fn>;
     saveMonth: ReturnType<typeof vi.fn>;
+    getProjectStats: ReturnType<typeof vi.fn>;
   };
 
   const mockProjects: ProjectConfig[] = [
@@ -55,7 +56,8 @@ describe('TimesheetStateService', () => {
       getProjects: vi.fn().mockReturnValue(of(mockProjects)),
       getProjectTree: vi.fn().mockReturnValue(of(mockTree)),
       getMonth: vi.fn().mockReturnValue(of(mockMonthData)),
-      saveMonth: vi.fn().mockReturnValue(of(mockMonthData))
+      saveMonth: vi.fn().mockReturnValue(of(mockMonthData)),
+      getProjectStats: vi.fn().mockReturnValue(of({ projectName: 'ProjHours', template: 'WorkHours', totalLoggedUnits: 10, actualWorkDays: 2, possibleWorkDays: 20, vacationDays: 0, sickDays: 0, holidayDays: 0, utilizationPercent: 10, breakdownRows: [] }))
     };
 
     TestBed.configureTestingModule({
@@ -146,5 +148,24 @@ describe('TimesheetStateService', () => {
     expect(service.isNavCollapsed()).toBe(true);
     service.toggleNavCollapsed();
     expect(service.isNavCollapsed()).toBe(false);
+  });
+
+  it('should switch view to year-stats and project-stats and reset to month-editor on selectMonth', () => {
+    service.showYearStats(2026);
+    expect(service.activeView()).toBe('year-stats');
+    expect(service.selectedYear()).toBe(2026);
+    expect(service.selectedMonth()).toBeNull();
+    expect(apiSpy.getProjectStats).toHaveBeenCalledWith('ProjHours', 2026);
+
+    service.showProjectStats();
+    expect(service.activeView()).toBe('project-stats');
+    expect(service.selectedYear()).toBeNull();
+    expect(service.selectedMonth()).toBeNull();
+    expect(apiSpy.getProjectStats).toHaveBeenCalledWith('ProjHours', null);
+
+    service.selectedYear.set(2026);
+    service.selectMonth(10);
+    expect(service.activeView()).toBe('month-editor');
+    expect(service.selectedMonth()).toBe(10);
   });
 });

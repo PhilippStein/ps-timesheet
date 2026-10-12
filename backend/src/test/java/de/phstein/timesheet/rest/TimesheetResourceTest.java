@@ -106,4 +106,31 @@ class TimesheetResourceTest {
                 .body("days[0].totalPt", equalTo(1.0f))
                 .body("days[0].notes", equalTo("- Feature complete"));
     }
+
+    @Test
+    void testGetProjectStats() {
+        given()
+                .when().get("/api/timesheets/ResourceTestHours/stats?year=2026")
+                .then()
+                .statusCode(200)
+                .body("projectName", equalTo("ResourceTestHours"))
+                .body("template", equalTo("WorkHours"))
+                .body("year", equalTo(2026))
+                .body("breakdownRows", hasSize(12));
+
+        given()
+                .when().get("/api/timesheets/ResourceTestHours/stats")
+                .then()
+                .statusCode(200)
+                .body("projectName", equalTo("ResourceTestHours"))
+                .body("template", equalTo("WorkHours"))
+                .body("year", nullValue())
+                .body("breakdownRows", notNullValue());
+
+        given()
+                .when().get("/api/timesheets/NonExistingProject/stats")
+                .then()
+                .statusCode(404)
+                .body("error", containsString("Project not found"));
+    }
 }

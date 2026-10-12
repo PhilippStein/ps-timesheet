@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AppConfigDTO, AppConfigUpdateDTO, ProjectConfig, ProjectTreeDTO } from '../models/project.model';
 import { TimesheetMonth } from '../models/timesheet.model';
+import { ProjectStats } from '../models/project-stats.model';
 
 @Injectable({
   providedIn: 'root'
@@ -47,5 +48,13 @@ export class TimesheetApiService {
     return this.http.get(`${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/${year}/${month}/pdf`, {
       responseType: 'blob'
     });
+  }
+
+  getProjectStats(projectName: string, year?: number | null): Observable<ProjectStats> {
+    let url = `${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/stats`;
+    if (year != null) {
+      url += `?year=${year}`;
+    }
+    return this.http.get<ProjectStats>(url);
   }
 }

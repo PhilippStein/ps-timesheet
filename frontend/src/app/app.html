@@ -10,7 +10,13 @@
       <div class="header-active-info">
         <span class="info-project">{{ state.selectedProject()?.name }}</span>
         <mat-icon class="crumb-separator">chevron_right</mat-icon>
-        <span class="info-period font-mono">{{ state.selectedYear() }} / {{ state.selectedMonth() ? (state.selectedMonth()! < 10 ? '0' + state.selectedMonth() : state.selectedMonth()) : '' }} - {{ getMonthName(state.selectedMonth()) }}</span>
+        @if (state.activeView() === 'project-stats') {
+          <span class="info-period font-mono">Gesamtübersicht (Alle Jahre)</span>
+        } @else if (state.activeView() === 'year-stats') {
+          <span class="info-period font-mono">Jahresübersicht {{ state.selectedYear() }}</span>
+        } @else {
+          <span class="info-period font-mono">{{ state.selectedYear() }} / {{ state.selectedMonth() ? (state.selectedMonth()! < 10 ? '0' + state.selectedMonth() : state.selectedMonth()) : '' }} - {{ getMonthName(state.selectedMonth()) }}</span>
+        }
         <span class="info-template-badge" [class.badge-hours]="state.isWorkHoursTemplate()" [class.badge-days]="state.isPersonDaysTemplate()">
           {{ state.selectedProject()?.template }}
         </span>
@@ -75,7 +81,9 @@
         </div>
       }
 
-      @if (state.activeMonthData()) {
+      @if (state.activeView() !== 'month-editor') {
+        <app-project-stats></app-project-stats>
+      } @else if (state.activeMonthData()) {
         @if (state.isWorkHoursTemplate()) {
           <app-work-hours-editor></app-work-hours-editor>
         } @else if (state.isPersonDaysTemplate()) {

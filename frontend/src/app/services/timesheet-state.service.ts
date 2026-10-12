@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
 import { AppConfigDTO, AppConfigUpdateDTO, PdfExportConfig, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
 import { DayStatus, TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
+import { ProjectStats } from '../models/project-stats.model';
 import { TimesheetApiService } from './timesheet-api.service';
 
 @Injectable({
@@ -17,6 +18,8 @@ export class TimesheetStateService {
   readonly selectedYear = signal<number | null>(null);
   readonly selectedMonth = signal<number | null>(null);
   readonly activeMonthData = signal<TimesheetMonth | null>(null);
+  readonly activeView = signal<'month-editor' | 'year-stats' | 'project-stats'>('month-editor');
+  readonly projectStats = signal<ProjectStats | null>(null);
   readonly saveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
@@ -192,9 +195,20 @@ export class TimesheetStateService {
           targetYear = match ? match.year : tree.years[0].year;
         }
 
-        this.selectedYear.set(targetYear);
-        this.selectedMonth.set(currentMonth);
-        this.loadActiveMonth(project.name, targetYear, currentMonth);
+        if (this.activeView() === 'project-stats') {
+          this.selectedYear.set(null);
+          this.selectedMonth.set(null);
+          this.loadStats(null);
+        } else if (this.activeView() === 'year-stats') {
+          this.selectedYear.set(targetYear);
+          this.selectedMonth.set(null);
+          this.loadStats(targetYear);
+        } else {
+          this.activeView.set('month-editor');
+          this.selectedYear.set(targetYear);
+          this.selectedMonth.set(currentMonth);
+          this.loadActiveMonth(project.name, targetYear, currentMonth);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -208,17 +222,59 @@ export class TimesheetStateService {
     const proj = this.selectedProject();
     if (!proj) return;
 
-    const currentMonth = this.selectedMonth() ?? (new Date().getMonth() + 1);
-    this.loadActiveMonth(proj.name, year, currentMonth);
+    if (this.activeView() === 'year-stats') {
+      this.selectedMonth.set(null);
+      this.loadStats(year);
+    } else {
+      if (this.activeView() === 'project-stats') {
+        this.activeView.set('month-editor');
+      }
+      const currentMonth = this.selectedMonth() ?? (new Date().getMonth() + 1);
+      this.selectedMonth.set(currentMonth);
+      this.loadActiveMonth(proj.name, year, currentMonth);
+    }
   }
 
   selectMonth(month: number) {
+    this.activeView.set('month-editor');
     this.selectedMonth.set(month);
     const proj = this.selectedProject();
     const year = this.selectedYear();
     if (!proj || !year) return;
 
     this.loadActiveMonth(proj.name, year, month);
+  }
+
+  showYearStats(year?: number) {
+    const targetYear = year ?? this.selectedYear() ?? (this.tree()?.years[0]?.year ?? new Date().getFullYear());
+    this.selectedYear.set(targetYear);
+    this.selectedMonth.set(null);
+    this.activeView.set('year-stats');
+    this.loadStats(targetYear);
+  }
+
+  showProjectStats() {
+    this.selectedYear.set(null);
+    this.selectedMonth.set(null);
+    this.activeView.set('project-stats');
+    this.loadStats(null);
+  }
+
+  loadStats(year?: number | null) {
+    const proj = this.selectedProject();
+    if (!proj) return;
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.api.getProjectStats(proj.name, year).subscribe({
+      next: (stats) => {
+        this.projectStats.set(stats);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(`Statistiken für ${proj.name} konnten nicht geladen werden.`);
+      }
+    });
   }
 
   loadActiveMonth(projectName: string, year: number, month: number) {
