@@ -232,31 +232,29 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
                         placeholder="+ Notiz (Enter)..."
                         (keydown)="handleNotesInputKeydown($event, day, rowIndex, noteInput)"
                         (blur)="handleNotesInputBlur(day, noteInput)">
-
-                      @if (getAllAvailableTemplateSuggestions(day).length > 0) {
-                        <button
-                          type="button"
-                          mat-icon-button
-                          class="notes-menu-btn"
-                          [matMenuTriggerFor]="notesMenu"
-                          title="Vorlagen">
-                          <mat-icon>playlist_add</mat-icon>
-                        </button>
-                        <mat-menu #notesMenu="matMenu" class="notes-templates-menu">
-                          @for (templateNote of getAllAvailableTemplateSuggestions(day); track templateNote) {
-                            <button mat-menu-item (click)="addNote(day, templateNote)">
-                              <mat-icon>add_circle_outline</mat-icon>
-                              <span>{{ templateNote }}</span>
-                            </button>
-                          }
-                        </mat-menu>
-                      }
                     </div>
                   </div>
                 </td>
 
                 <td class="col-actions">
                   <div class="action-buttons-cell">
+                    <button
+                      mat-icon-button
+                      class="row-action-btn"
+                      [matMenuTriggerFor]="notesMenu"
+                      [disabled]="getAllAvailableTemplateSuggestions(day).length === 0"
+                      matTooltip="Tätigkeit-Vorlagen"
+                      aria-label="Tätigkeit-Vorlagen">
+                      <mat-icon>playlist_add</mat-icon>
+                    </button>
+                    <mat-menu #notesMenu="matMenu" class="notes-templates-menu">
+                      @for (templateNote of getAllAvailableTemplateSuggestions(day); track templateNote) {
+                        <button mat-menu-item (click)="addNote(day, templateNote)">
+                          <mat-icon>add_circle_outline</mat-icon>
+                          <span>{{ templateNote }}</span>
+                        </button>
+                      }
+                    </mat-menu>
                     <button
                       mat-icon-button
                       class="row-action-btn"
@@ -452,7 +450,7 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
       text-align: center;
     }
     .col-notes { width: auto; min-width: 250px; }
-    .col-actions { width: 76px; min-width: 76px; text-align: center; padding: 2px 4px !important; }
+    .col-actions { width: 96px; min-width: 96px; text-align: center; padding: 2px 4px !important; }
 
     .cell-select {
       width: 100%;
@@ -868,34 +866,6 @@ import { TaskColumnsDialogComponent } from '../task-columns-dialog/task-columns-
         border-color: #4dabf7;
         background: #ffffff;
         box-shadow: 0 0 0 1px #4dabf7;
-      }
-    }
-
-    .notes-menu-btn {
-      &.mat-mdc-icon-button {
-        --mdc-icon-button-state-layer-size: 20px;
-        --mdc-icon-button-icon-size: 14px;
-        width: 20px !important;
-        height: 20px !important;
-        min-width: 20px !important;
-        min-height: 20px !important;
-        padding: 0 !important;
-        line-height: 20px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #868e96;
-      }
-
-      mat-icon {
-        font-size: 14px;
-        width: 14px;
-        height: 14px;
-        line-height: 14px;
-      }
-
-      &:hover {
-        color: #1971c2;
       }
     }
 
