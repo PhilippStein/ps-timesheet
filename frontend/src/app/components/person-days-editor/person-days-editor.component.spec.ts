@@ -195,7 +195,44 @@ describe('PersonDaysEditorComponent', () => {
     expect(day.notes).toBe('- Third\n- Second\n- First');
   });
 
-  it('should support cross-day drag and drop copying of notes', () => {
+  it('should support cross-day drag and drop moving of notes by default, including into empty days', () => {
+    const day1 = {
+      date: '2026-10-01',
+      dayOfWeek: 'Donnerstag',
+      isWeekend: false,
+      notesList: ['Architektur Meeting', 'Dev Sync'],
+      notes: '- Architektur Meeting\n- Dev Sync'
+    };
+    const day2 = {
+      date: '2026-10-02',
+      dayOfWeek: 'Freitag',
+      isWeekend: false,
+      notesList: [] as string[],
+      notes: null as string | null
+    };
+
+    const container1 = { data: { day: day1, list: day1.notesList } };
+    const container2 = { data: { day: day2, list: day2.notesList } };
+
+    // Drag 'Architektur Meeting' (index 0) from day1 and drop onto empty day2 without modifier key (move)
+    component.dropNote(day2, {
+      previousContainer: container1,
+      container: container2,
+      previousIndex: 0,
+      currentIndex: 0,
+      event: { altKey: false, ctrlKey: false }
+    } as any);
+
+    // Source day1 should have 'Architektur Meeting' removed
+    expect(day1.notesList).toEqual(['Dev Sync']);
+    expect(day1.notes).toBe('- Dev Sync');
+
+    // Target day2 should now contain 'Architektur Meeting'
+    expect(day2.notesList).toEqual(['Architektur Meeting']);
+    expect(day2.notes).toBe('- Architektur Meeting');
+  });
+
+  it('should support cross-day drag and drop copying of notes when modifier key is pressed', () => {
     const day1 = {
       date: '2026-10-01',
       dayOfWeek: 'Donnerstag',
@@ -214,12 +251,13 @@ describe('PersonDaysEditorComponent', () => {
     const container1 = { data: { day: day1, list: day1.notesList } };
     const container2 = { data: { day: day2, list: day2.notesList } };
 
-    // Drag 'Architektur Meeting' (index 0) from day1 and drop onto day2 (index 1)
+    // Drag 'Architektur Meeting' (index 0) from day1 and drop onto day2 with altKey (Option/Alt copy)
     component.dropNote(day2, {
       previousContainer: container1,
       container: container2,
       previousIndex: 0,
-      currentIndex: 1
+      currentIndex: 1,
+      event: { altKey: true, ctrlKey: false }
     } as any);
 
     // Source day1 should keep its notes unchanged (copy semantics)
@@ -229,6 +267,36 @@ describe('PersonDaysEditorComponent', () => {
     // Target day2 should have the copied note inserted at index 1
     expect(day2.notesList).toEqual(['Code Review', 'Architektur Meeting']);
     expect(day2.notes).toBe('- Code Review\n- Architektur Meeting');
+  });
+
+  it('should track dragging state and copy modifier when drag operations start and end', () => {
+    expect(component.isDraggingNote).toBe(false);
+    expect(component.isCopyModifierActive).toBe(false);
+
+    component.onDragStarted();
+    expect(component.isDraggingNote).toBe(true);
+
+    // Pressing Option / Alt key while dragging should activate copy modifier
+    const altKeyDown = new KeyboardEvent('keydown', { altKey: true } as any);
+    Object.defineProperty(altKeyDown, 'altKey', { value: true });
+    component.onWindowKeydown(altKeyDown);
+    expect(component.isCopyModifierActive).toBe(true);
+
+    // Releasing Option / Alt key while dragging should deactivate copy modifier
+    const altKeyUp = new KeyboardEvent('keyup', { altKey: false } as any);
+    Object.defineProperty(altKeyUp, 'altKey', { value: false });
+    component.onWindowKeyup(altKeyUp);
+    expect(component.isCopyModifierActive).toBe(false);
+
+    // Mouse movement with Alt key should also update state
+    const mouseMove = new MouseEvent('mousemove', { altKey: true } as any);
+    Object.defineProperty(mouseMove, 'altKey', { value: true });
+    component.onWindowMouseMove(mouseMove);
+    expect(component.isCopyModifierActive).toBe(true);
+
+    component.onDragEnded();
+    expect(component.isDraggingNote).toBe(false);
+    expect(component.isCopyModifierActive).toBe(false);
   });
 
   it('should support inline editing of notes', () => {
