@@ -1,16 +1,16 @@
 package de.phstein.timesheet.service;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.ColumnText;
-import com.lowagie.text.pdf.PdfContentByte;
-import com.lowagie.text.pdf.PdfImportedPage;
-import com.lowagie.text.pdf.PdfPageEventHelper;
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfTemplate;
-import com.lowagie.text.pdf.PdfWriter;
+import org.openpdf.text.Document;
+import org.openpdf.text.Element;
+import org.openpdf.text.Font;
+import org.openpdf.text.Phrase;
+import org.openpdf.text.pdf.ColumnText;
+import org.openpdf.text.pdf.PdfContentByte;
+import org.openpdf.text.pdf.PdfImportedPage;
+import org.openpdf.text.pdf.PdfPageEventHelper;
+import org.openpdf.text.pdf.PdfReader;
+import org.openpdf.text.pdf.PdfTemplate;
+import org.openpdf.text.pdf.PdfWriter;
 
 public class PdfPageTemplateHelper extends PdfPageEventHelper {
 

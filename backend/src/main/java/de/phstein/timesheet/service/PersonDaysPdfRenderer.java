@@ -1,14 +1,14 @@
 package de.phstein.timesheet.service;
 
-import com.lowagie.text.Chunk;
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.ListItem;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
+import org.openpdf.text.Chunk;
+import org.openpdf.text.Document;
+import org.openpdf.text.Element;
+import org.openpdf.text.Font;
+import org.openpdf.text.ListItem;
+import org.openpdf.text.Paragraph;
+import org.openpdf.text.Phrase;
+import org.openpdf.text.pdf.PdfPCell;
+import org.openpdf.text.pdf.PdfPTable;
 import de.phstein.timesheet.config.ProjectConfig;
 import de.phstein.timesheet.model.TimesheetDayDTO;
 import de.phstein.timesheet.model.TimesheetMonthDTO;
@@ -195,7 +195,7 @@ public class PersonDaysPdfRenderer {
             return cell;
         }
 
-        com.lowagie.text.List list = new com.lowagie.text.List(false, 10f);
+        org.openpdf.text.List list = new org.openpdf.text.List(false, 10f);
         list.setListSymbol(new Chunk("\u2022 ", font));
         for (String item : items) {
             ListItem listItem = new ListItem(item, font);
