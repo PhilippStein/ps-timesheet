@@ -1,9 +1,9 @@
 package de.phstein.timesheet.service;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.pdf.PdfReader;
-import com.lowagie.text.pdf.PdfWriter;
+import org.openpdf.text.Document;
+import org.openpdf.text.PageSize;
+import org.openpdf.text.pdf.PdfReader;
+import org.openpdf.text.pdf.PdfWriter;
 import de.phstein.timesheet.config.AppConfig;
 import de.phstein.timesheet.config.AppConfigService;
 import de.phstein.timesheet.config.PdfExportConfig;
