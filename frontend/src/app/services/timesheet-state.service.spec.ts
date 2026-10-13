@@ -168,4 +168,61 @@ describe('TimesheetStateService', () => {
     expect(service.activeView()).toBe('month-editor');
     expect(service.selectedMonth()).toBe(10);
   });
+
+  it('should not overwrite activeMonthData when delayed auto-save completes for previous project', async () => {
+    vi.useFakeTimers();
+
+    const projDaysMonth: TimesheetMonth = {
+      projectName: 'ProjDays',
+      year: 2026,
+      month: 10,
+      template: 'PersonDays',
+      taskColumns: ['Dev'],
+      days: []
+    };
+
+    // User is on ProjHours and updates month data
+    service.activeMonthData.set(JSON.parse(JSON.stringify(mockMonthData)));
+    service.updateActiveMonthData(data => {
+      data.days[0].comment = 'Updated in Other';
+    });
+
+    // User switches to ProjDays before debounce fires
+    apiSpy.getMonth.mockReturnValue(of(projDaysMonth));
+    service.selectProject(mockProjects[1]);
+    expect(service.selectedProject()?.name).toBe('ProjDays');
+    expect(service.activeMonthData()?.projectName).toBe('ProjDays');
+
+    // Debounce timer (400ms) elapses and save response returns for ProjHours
+    await vi.advanceTimersByTimeAsync(500);
+
+    // activeMonthData must STILL be ProjDays, not overwritten by ProjHours!
+    expect(service.activeMonthData()?.projectName).toBe('ProjDays');
+
+    vi.useRealTimers();
+  });
+
+  it('should ignore stale getMonth response if user navigated away before response arrived', () => {
+    service.selectedProject.set(mockProjects[0]);
+    service.selectedYear.set(2026);
+    service.selectedMonth.set(10);
+    service.activeMonthData.set(mockMonthData);
+
+    // Stale response from month 9 arrives
+    const month9Data: TimesheetMonth = {
+      projectName: 'ProjHours',
+      year: 2026,
+      month: 9,
+      template: 'WorkHours',
+      taskColumns: [],
+      days: []
+    };
+    apiSpy.getMonth.mockReturnValue(of(month9Data));
+
+    // Calling loadActiveMonth for month 9 when selectedMonth is already 10
+    service.loadActiveMonth('ProjHours', 2026, 9);
+
+    // activeMonthData should NOT be replaced by month 9
+    expect(service.activeMonthData()?.month).toBe(10);
+  });
 });
