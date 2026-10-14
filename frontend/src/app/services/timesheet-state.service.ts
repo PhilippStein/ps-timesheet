@@ -1,5 +1,5 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, Subject, debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs';
+import { Observable, Subject, concatMap, catchError, debounceTime, distinctUntilChanged, of, tap } from 'rxjs';
 import { AppConfigDTO, AppConfigUpdateDTO, PdfExportConfig, ProjectConfig, ProjectTreeDTO, YearNodeDTO, MonthNodeDTO } from '../models/project.model';
 import { DayStatus, TimesheetDay, TimesheetMonth } from '../models/timesheet.model';
 import { ProjectStats } from '../models/project-stats.model';
@@ -123,19 +123,27 @@ export class TimesheetStateService {
   private initAutoSave() {
     this.saveSubject.pipe(
       debounceTime(400),
-      switchMap(monthData => {
+      concatMap(monthData => {
         this.saveStatus.set('saving');
-        return this.api.saveMonth(monthData.projectName, monthData.year, monthData.month, monthData);
+        return this.api.saveMonth(monthData.projectName, monthData.year, monthData.month, monthData).pipe(
+          catchError(err => {
+            console.error('Auto-save error', err);
+            this.saveStatus.set('error');
+            return of(null);
+          })
+        );
       })
     ).subscribe({
       next: (saved) => {
-        this.activeMonthData.set(saved);
+        if (!saved) return;
+        const current = this.activeMonthData();
+        if (current && current.projectName === saved.projectName && current.year === saved.year && current.month === saved.month) {
+          this.activeMonthData.set(saved);
+        }
         this.saveStatus.set('saved');
-        this.refreshTreeSilently();
-      },
-      error: (err) => {
-        console.error('Auto-save error', err);
-        this.saveStatus.set('error');
+        if (this.selectedProject()?.name === saved.projectName) {
+          this.refreshTreeSilently();
+        }
       }
     });
   }
@@ -184,6 +192,9 @@ export class TimesheetStateService {
 
     this.api.getProjectTree(project.name).subscribe({
       next: (tree) => {
+        if (this.selectedProject()?.name !== project.name) {
+          return;
+        }
         this.tree.set(tree);
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1;
@@ -211,8 +222,10 @@ export class TimesheetStateService {
         }
       },
       error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(`Ordnerstruktur für ${project.name} konnte nicht geladen werden.`);
+        if (this.selectedProject()?.name === project.name) {
+          this.isLoading.set(false);
+          this.errorMessage.set(`Ordnerstruktur für ${project.name} konnte nicht geladen werden.`);
+        }
       }
     });
   }
@@ -265,14 +278,19 @@ export class TimesheetStateService {
     if (!proj) return;
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.api.getProjectStats(proj.name, year).subscribe({
+    const projName = proj.name;
+    this.api.getProjectStats(projName, year).subscribe({
       next: (stats) => {
-        this.projectStats.set(stats);
-        this.isLoading.set(false);
+        if (this.selectedProject()?.name === projName) {
+          this.projectStats.set(stats);
+          this.isLoading.set(false);
+        }
       },
       error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(`Statistiken für ${proj.name} konnten nicht geladen werden.`);
+        if (this.selectedProject()?.name === projName) {
+          this.isLoading.set(false);
+          this.errorMessage.set(`Statistiken für ${projName} konnten nicht geladen werden.`);
+        }
       }
     });
   }
@@ -283,13 +301,25 @@ export class TimesheetStateService {
 
     this.api.getMonth(projectName, year, month).subscribe({
       next: (data) => {
-        this.activeMonthData.set(data);
-        this.isLoading.set(false);
-        this.refreshTreeSilently();
+        if (
+          this.selectedProject()?.name === projectName &&
+          this.selectedYear() === year &&
+          this.selectedMonth() === month
+        ) {
+          this.activeMonthData.set(data);
+          this.isLoading.set(false);
+          this.refreshTreeSilently();
+        }
       },
       error: (err) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(`Monatsdaten für ${year}-${month} konnten nicht geladen werden.`);
+        if (
+          this.selectedProject()?.name === projectName &&
+          this.selectedYear() === year &&
+          this.selectedMonth() === month
+        ) {
+          this.isLoading.set(false);
+          this.errorMessage.set(`Monatsdaten für ${year}-${month} konnten nicht geladen werden.`);
+        }
       }
     });
   }
@@ -332,8 +362,14 @@ export class TimesheetStateService {
     this.saveStatus.set('saving');
     this.api.saveMonth(current.projectName, current.year, current.month, current).subscribe({
       next: (saved) => {
-        this.activeMonthData.set(saved);
+        const active = this.activeMonthData();
+        if (active && active.projectName === saved.projectName && active.year === saved.year && active.month === saved.month) {
+          this.activeMonthData.set(saved);
+        }
         this.saveStatus.set('saved');
+        if (this.selectedProject()?.name === saved.projectName) {
+          this.refreshTreeSilently();
+        }
       },
       error: (err) => {
         this.saveStatus.set('error');
