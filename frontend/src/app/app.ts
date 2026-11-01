@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { TimesheetNavigationComponent } from './components/navigation/timesheet-navigation.component';
 import { WorkHoursEditorComponent } from './components/work-hours-editor/work-hours-editor.component';
 import { PersonDaysEditorComponent } from './components/person-days-editor/person-days-editor.component';
@@ -25,6 +26,7 @@ import { DateUtils } from './utils/date-utils';
     MatProgressBarModule,
     MatTooltipModule,
     MatDialogModule,
+    MatMenuModule,
     TimesheetNavigationComponent,
     WorkHoursEditorComponent,
     PersonDaysEditorComponent,

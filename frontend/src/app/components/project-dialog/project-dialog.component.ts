@@ -154,15 +154,15 @@ export type ProjectDialogResult = ProjectConfig | { delete: true; projectName: s
         }
 
         <div class="config-section">
-          <label class="section-label">PDF-Export Einstellungen (optional):</label>
+          <label class="section-label">Export Einstellungen (optional):</label>
           @if (template === 'WorkHours') {
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>PDF-Header Titel</mat-label>
+              <mat-label>Header Titel</mat-label>
               <input matInput [(ngModel)]="pdfHeaderTitle" placeholder="z.B. Tätigkeitsnachweis Entwicklung (Standard: Projektname)">
             </mat-form-field>
           }
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>PDF-Abschlusstext / Footer</mat-label>
+            <mat-label>Abschlusstext / Footer</mat-label>
             <textarea matInput [(ngModel)]="pdfFooterText" rows="3" placeholder="z.B. Leistung wie vereinbart erbracht. Zahlbar rein netto..."></textarea>
           </mat-form-field>
         </div>

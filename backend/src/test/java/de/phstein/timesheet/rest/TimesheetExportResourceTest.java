@@ -60,9 +60,65 @@ class TimesheetExportResourceTest {
     }
 
     @Test
+    void testExportDocxWorkHours() {
+        given()
+                .when().get("/api/timesheets/PdfTestHours/2026/10/docx")
+                .then()
+                .statusCode(200)
+                .contentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                .header("Content-Disposition", equalTo("attachment; filename=\"PdfTestHours_2026_10.docx\""));
+    }
+
+    @Test
+    void testExportDocxPersonDays() {
+        given()
+                .when().get("/api/timesheets/PdfTestDays/2026/10/docx")
+                .then()
+                .statusCode(200)
+                .contentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                .header("Content-Disposition", equalTo("attachment; filename=\"PdfTestDays_2026_10.docx\""));
+    }
+
+    @Test
+    void testExportXlsxWorkHours() {
+        given()
+                .when().get("/api/timesheets/PdfTestHours/2026/10/xlsx")
+                .then()
+                .statusCode(200)
+                .contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header("Content-Disposition", equalTo("attachment; filename=\"PdfTestHours_2026_10.xlsx\""));
+    }
+
+    @Test
+    void testExportXlsxPersonDays() {
+        given()
+                .when().get("/api/timesheets/PdfTestDays/2026/10/xlsx")
+                .then()
+                .statusCode(200)
+                .contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header("Content-Disposition", equalTo("attachment; filename=\"PdfTestDays_2026_10.xlsx\""));
+    }
+
+    @Test
     void testExportPdfProjectNotFound() {
         given()
                 .when().get("/api/timesheets/NonExistentProject/2026/10/pdf")
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void testExportDocxProjectNotFound() {
+        given()
+                .when().get("/api/timesheets/NonExistentProject/2026/10/docx")
+                .then()
+                .statusCode(404);
+    }
+
+    @Test
+    void testExportXlsxProjectNotFound() {
+        given()
+                .when().get("/api/timesheets/NonExistentProject/2026/10/xlsx")
                 .then()
                 .statusCode(404);
     }
@@ -76,6 +132,22 @@ class TimesheetExportResourceTest {
     }
 
     @Test
+    void testExportDocxInvalidMonth() {
+        given()
+                .when().get("/api/timesheets/PdfTestHours/2026/13/docx")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void testExportXlsxInvalidMonth() {
+        given()
+                .when().get("/api/timesheets/PdfTestHours/2026/13/xlsx")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
     void testExportPdfMissingStationeryThrows400() {
         AppConfig config = appConfigService.loadConfig();
         config.setPdfExport(new PdfExportConfig("/missing/file/stationery.pdf", 20.0, 20.0, 15.0, 15.0));
@@ -83,6 +155,18 @@ class TimesheetExportResourceTest {
 
         given()
                 .when().get("/api/timesheets/PdfTestHours/2026/10/pdf")
+                .then()
+                .statusCode(400);
+    }
+
+    @Test
+    void testExportDocxMissingStationeryThrows400() {
+        AppConfig config = appConfigService.loadConfig();
+        config.setPdfExport(new PdfExportConfig("/missing/file/stationery.pdf", 20.0, 20.0, 15.0, 15.0));
+        appConfigService.saveConfig(config);
+
+        given()
+                .when().get("/api/timesheets/PdfTestHours/2026/10/docx")
                 .then()
                 .statusCode(400);
     }

@@ -25,10 +25,25 @@
 
     <div class="header-spacer"></div>
 
-    <button mat-button class="header-pdf-btn" (click)="state.exportPdf()" [disabled]="!state.selectedProject() || !state.selectedYear() || !state.selectedMonth()" matTooltip="Monat als PDF exportieren" aria-label="PDF exportieren">
-      <mat-icon>picture_as_pdf</mat-icon>
-      <span>PDF Export</span>
+    <button mat-button class="header-pdf-btn" [matMenuTriggerFor]="exportMenu" [disabled]="!state.selectedProject() || !state.selectedYear() || !state.selectedMonth()" matTooltip="Monat exportieren (PDF, DOCX, XLSX)" aria-label="Exportieren">
+      <mat-icon>file_download</mat-icon>
+      <span>Export</span>
+      <mat-icon>arrow_drop_down</mat-icon>
     </button>
+    <mat-menu #exportMenu="matMenu">
+      <button mat-menu-item (click)="state.exportPdf()">
+        <mat-icon>picture_as_pdf</mat-icon>
+        <span>PDF Export (.pdf)</span>
+      </button>
+      <button mat-menu-item (click)="state.exportDocx()">
+        <mat-icon>description</mat-icon>
+        <span>Word Export (.docx)</span>
+      </button>
+      <button mat-menu-item (click)="state.exportXlsx()">
+        <mat-icon>table_view</mat-icon>
+        <span>Excel Export (.xlsx)</span>
+      </button>
+    </mat-menu>
 
     <!-- AUTO-SAVE STATUS INDICATOR -->
     <div class="save-status-indicator">

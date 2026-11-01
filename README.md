@@ -31,13 +31,20 @@ Die Datenhaltung erfolgt rein dateibasiert im Dateisystem in menschenlesbaren CS
   - Tabellarische Aufschlüsselung nach Monaten bzw. Jahren.
   - Aufgaben-/Task-Verteilung der geleisteten Personentage (`PersonDays`).
   - Detaillierte Ertrags- und Ausfallanalyse (Verdienstentfall durch Urlaub, Krankheit oder Minderleistung).
-- **Druckfertiger PDF-Export**:
-  - Hochwertige PDF-Generierung mit OpenPDF und eingebetteter „PT Sans“-Typografie (11pt).
-  - Unterstützung für kundenspezifisches PDF-Briefpapier/Briefbögen als Hintergrund mit konfigurierbaren Schutzzonen (`marginTopMm`, `marginBottomMm`, `marginLeftMm`, `marginRightMm`).
-  - Vorlagenlayouts:
-    - **PersonDays**: Formeller *Leistungsschein* mit dynamischen Task-Spalten, formatierten Tätigkeitslisten, zentrierten Werten und zweistufigem Summenfooter.
+- **Vielseitiger Export (PDF, DOCX & XLSX)**:
+  - **Druckfertiger PDF-Export**:
+    - Hochwertige PDF-Generierung mit OpenPDF und eingebetteter „PT Sans“-Typografie (11pt).
+    - Unterstützung für kundenspezifisches PDF-Briefpapier/Briefbögen als Hintergrund mit konfigurierbaren Schutzzonen (`marginTopMm`, `marginBottomMm`, `marginLeftMm`, `marginRightMm`).
+    - Automatische Tabellenkopf-Wiederholung auf Folgeseiten und dynamische Paginierung (`Seite X/Y`).
+  - **Microsoft Word Export (DOCX)**:
+    - Generierung strukturierter Word-Dokumente (`.docx`) mittels Apache POI.
+    - Automatisches serverseitiges Rendern des konfigurierten PDF-Briefpapiers als seitenfüllender Hintergrund (300 DPI) im Header.
+    - Dynamische Anpassung an die Textbreite (erweiterte Tätigkeit-/Bemerkungsspalte) und native Fußzeilen-Paginierung (`Seite X/Y`).
+  - **Microsoft Excel Export (XLSX)**:
+    - Tabellenkalkulations-Export (`.xlsx`) via Apache POI inklusive formatierter Datums- und Zeitzellen, Summenformeln und optimierten Spaltenbreiten.
+  - **Vorlagenlayouts (für alle Formate)**:
+    - **PersonDays**: Formeller *Leistungsschein* mit dynamischen Task-Spalten, formatierten Tätigkeitslisten, zentrierten Werten und zweistufigem Summenfooter (mit farblicher Hervorhebung).
     - **WorkHours**: Strukturierte Monatstabelle mit automatischer Wochenendfilterung (nur befüllte Wochenenden), hellgrau hervorgehobenen Wochen- und Monatssummen sowie kompakter Dezimalstatistik.
-  - Automatische Tabellenkopf-Wiederholung auf Folgeseiten und dynamische Paginierung (`Seite X/Y`).
 - **Tastatur-Ergonomie & Spreadsheet-Flow**:
   - `Tab` / `Shift+Tab`: Horizontale Zellennavigation.
   - `Enter`: Vertikaler Sprung in dieselbe Spalte des nächsten Kalendertags.
@@ -53,12 +60,12 @@ Die Datenhaltung erfolgt rein dateibasiert im Dateisystem in menschenlesbaren CS
 
 ## Konfiguration (`~/.pstimesheet.yaml`)
 
-Die Konfiguration wird zentral in `~/.pstimesheet.yaml` verwaltet und kann globale PDF-Export-Parameter sowie projektspezifische Sätze und Texte definieren:
+Die Konfiguration wird zentral in `~/.pstimesheet.yaml` verwaltet und kann globale Export- und Briefpapier-Parameter sowie projektspezifische Sätze und Texte definieren:
 
 ```yaml
-# Globale Einstellungen für den PDF-Export (optional)
+# Globale Einstellungen für Export & Briefpapier (optional)
 pdfExport:
-  templatePdfPath: "/Users/user/Documents/Briefpapier.pdf"  # Optionaler Pfad zu Hintergrund-PDF
+  templatePdfPath: "/Users/user/Documents/Briefpapier.pdf"  # Optionaler Pfad zu Hintergrund-PDF (für PDF- & DOCX-Export)
   marginTopMm: 35.0                                        # Header-Schutzzone (Abstand oben)
   marginBottomMm: 25.0                                     # Footer-Schutzzone (Abstand unten)
   marginLeftMm: 15.0
@@ -69,8 +76,8 @@ projects:
     basePath: "/Users/user/timesheets/Alpha"
     template: "WorkHours"
     hourlyRate: 95.00                                      # Optional: Stundensatz in € (Netto)
-    pdfHeaderTitle: "Tätigkeitsnachweis Entwicklung"       # Optional: Eigener Titel im PDF
-    pdfFooterText: "Leistung wie vereinbart erbracht.\nZahlbar rein netto innerhalb von 14 Tagen."
+    pdfHeaderTitle: "Tätigkeitsnachweis Entwicklung"       # Optional: Eigener Titel im Header (PDF / DOCX)
+    pdfFooterText: "Leistung wie vereinbart erbracht.\nZahlbar rein netto innerhalb von 14 Tagen."  # Optional: Abschlusstext / Footer
   - name: "Kundenprojekt Beta"
     basePath: "/Users/user/timesheets/Beta"
     template: "PersonDays"

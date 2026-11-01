@@ -26,6 +26,8 @@ describe('TimesheetNavigationComponent', () => {
       deleteProject: vi.fn().mockReturnValue(of(undefined)),
       getConfig: vi.fn().mockReturnValue(of({ projects: [{ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' }] })),
       downloadPdf: vi.fn().mockReturnValue(of(new Blob(['pdf content'], { type: 'application/pdf' }))),
+      downloadDocx: vi.fn().mockReturnValue(of(new Blob(['docx content'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }))),
+      downloadXlsx: vi.fn().mockReturnValue(of(new Blob(['xlsx content'], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))),
       getProjectStats: vi.fn().mockReturnValue(of(null))
     };
 
@@ -51,7 +53,7 @@ describe('TimesheetNavigationComponent', () => {
 
   it('should render collapse button and toggle collapse state when clicked', () => {
     expect(state.isNavCollapsed()).toBe(false);
-    
+
     // Check expanded view
     const compiled = fixture.nativeElement as HTMLElement;
     const collapseBtn = compiled.querySelector('.collapse-toggle-btn') as HTMLButtonElement;
@@ -74,18 +76,30 @@ describe('TimesheetNavigationComponent', () => {
     expect(compiled.querySelector('.projects-column')).toBeTruthy();
   });
 
-  it('should trigger PDF download on exportMonthPdf', () => {
+  it('should trigger PDF, DOCX and XLSX download on month export actions', () => {
     state.selectedProject.set({ name: 'TestProj', basePath: '/tmp/test', template: 'WorkHours' });
     state.selectedYear.set(2026);
 
-    const event = new MouseEvent('click');
-    const stopPropagationSpy = vi.spyOn(event, 'stopPropagation');
+    const event1 = new MouseEvent('click');
+    const stopPropagationSpy1 = vi.spyOn(event1, 'stopPropagation');
     const exportPdfSpy = vi.spyOn(state, 'exportPdf');
-
-    component.exportMonthPdf(10, event);
-
-    expect(stopPropagationSpy).toHaveBeenCalled();
+    component.exportMonthPdf(10, event1);
+    expect(stopPropagationSpy1).toHaveBeenCalled();
     expect(exportPdfSpy).toHaveBeenCalledWith(10);
+
+    const event2 = new MouseEvent('click');
+    const stopPropagationSpy2 = vi.spyOn(event2, 'stopPropagation');
+    const exportDocxSpy = vi.spyOn(state, 'exportDocx');
+    component.exportMonthDocx(10, event2);
+    expect(stopPropagationSpy2).toHaveBeenCalled();
+    expect(exportDocxSpy).toHaveBeenCalledWith(10);
+
+    const event3 = new MouseEvent('click');
+    const stopPropagationSpy3 = vi.spyOn(event3, 'stopPropagation');
+    const exportXlsxSpy = vi.spyOn(state, 'exportXlsx');
+    component.exportMonthXlsx(10, event3);
+    expect(stopPropagationSpy3).toHaveBeenCalled();
+    expect(exportXlsxSpy).toHaveBeenCalledWith(10);
   });
 
   it('should handle project deletion when requested from edit dialog', () => {
