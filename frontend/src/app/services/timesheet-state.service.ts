@@ -120,6 +120,54 @@ export class TimesheetStateService {
     });
   }
 
+  exportDocx(month?: number) {
+    const proj = this.selectedProject()?.name;
+    const year = this.selectedYear();
+    const m = month ?? this.selectedMonth();
+    if (!proj || !year || !m) return;
+    this.api.downloadDocx(proj, year, m).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const monthPad = m < 10 ? `0${m}` : `${m}`;
+        a.download = `${proj}_${year}_${monthPad}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('DOCX export failed', err);
+        this.errorMessage.set('DOCX Export fehlgeschlagen: ' + (err.error?.message || err.message || 'Unbekannter Fehler'));
+      }
+    });
+  }
+
+  exportXlsx(month?: number) {
+    const proj = this.selectedProject()?.name;
+    const year = this.selectedYear();
+    const m = month ?? this.selectedMonth();
+    if (!proj || !year || !m) return;
+    this.api.downloadXlsx(proj, year, m).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const monthPad = m < 10 ? `0${m}` : `${m}`;
+        a.download = `${proj}_${year}_${monthPad}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('XLSX export failed', err);
+        this.errorMessage.set('XLSX Export fehlgeschlagen: ' + (err.error?.message || err.message || 'Unbekannter Fehler'));
+      }
+    });
+  }
+
   private initAutoSave() {
     this.saveSubject.pipe(
       debounceTime(400),

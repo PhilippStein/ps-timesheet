@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 import { TimesheetStateService } from '../../services/timesheet-state.service';
 import { TimesheetApiService } from '../../services/timesheet-api.service';
 import { ProjectConfig, MonthNodeDTO, YearNodeDTO } from '../../models/project.model';
@@ -17,7 +18,8 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatDialogModule
+    MatDialogModule,
+    MatMenuModule
   ],
   template: `
     <nav class="onenote-nav-container" [class.collapsed]="state.isNavCollapsed()">
@@ -139,11 +141,26 @@ import { ProjectDialogComponent, ProjectDialogResult } from '../project-dialog/p
                 <button
                   mat-icon-button
                   class="item-action-btn pdf-action-btn"
-                  (click)="exportMonthPdf(monthNode.month, $event)"
-                  matTooltip="PDF exportieren"
-                  aria-label="PDF exportieren">
-                  <mat-icon>picture_as_pdf</mat-icon>
+                  [matMenuTriggerFor]="monthExportMenu"
+                  (click)="$event.stopPropagation()"
+                  matTooltip="Exportieren (PDF, DOCX, XLSX)"
+                  aria-label="Exportieren">
+                  <mat-icon>file_download</mat-icon>
                 </button>
+                <mat-menu #monthExportMenu="matMenu">
+                  <button mat-menu-item (click)="exportMonthPdf(monthNode.month, $event)">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <span>PDF (.pdf)</span>
+                  </button>
+                  <button mat-menu-item (click)="exportMonthDocx(monthNode.month, $event)">
+                    <mat-icon>description</mat-icon>
+                    <span>Word (.docx)</span>
+                  </button>
+                  <button mat-menu-item (click)="exportMonthXlsx(monthNode.month, $event)">
+                    <mat-icon>table_view</mat-icon>
+                    <span>Excel (.xlsx)</span>
+                  </button>
+                </mat-menu>
               </div>
             } @empty {
               <div class="empty-hint">-</div>
@@ -501,6 +518,16 @@ export class TimesheetNavigationComponent {
   exportMonthPdf(month: number, event: MouseEvent) {
     event.stopPropagation();
     this.state.exportPdf(month);
+  }
+
+  exportMonthDocx(month: number, event: MouseEvent) {
+    event.stopPropagation();
+    this.state.exportDocx(month);
+  }
+
+  exportMonthXlsx(month: number, event: MouseEvent) {
+    event.stopPropagation();
+    this.state.exportXlsx(month);
   }
 
   openAddProjectDialog() {

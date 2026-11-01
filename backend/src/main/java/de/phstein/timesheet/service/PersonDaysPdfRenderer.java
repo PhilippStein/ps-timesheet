@@ -32,6 +32,7 @@ public class PersonDaysPdfRenderer {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("EEEE,\ndd.MM.yyyy", Locale.GERMAN);
     private static final Color GRID_COLOR = new Color(100, 100, 100);
+    private static final Color HEADER_BG_COLOR = new Color(238, 238, 238); // #EEEEEE
 
     @Inject
     PdfFontService pdfFontService;
@@ -125,6 +126,7 @@ public class PersonDaysPdfRenderer {
         sumLabelCell.setPadding(4f);
         sumLabelCell.setBorderColor(GRID_COLOR);
         sumLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        sumLabelCell.setBackgroundColor(HEADER_BG_COLOR);
         table.addCell(sumLabelCell);
 
         for (String task : taskColumns) {
@@ -133,17 +135,20 @@ public class PersonDaysPdfRenderer {
             taskSumCell.setPadding(4f);
             taskSumCell.setBorderColor(GRID_COLOR);
             taskSumCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            taskSumCell.setBackgroundColor(HEADER_BG_COLOR);
             table.addCell(taskSumCell);
         }
 
         PdfPCell emptyNotesCell = new PdfPCell(new Phrase("", fontRegular));
         emptyNotesCell.setPadding(4f);
         emptyNotesCell.setBorderColor(GRID_COLOR);
+        emptyNotesCell.setBackgroundColor(HEADER_BG_COLOR);
         table.addCell(emptyNotesCell);
 
         PdfPCell emptyLocCell = new PdfPCell(new Phrase("", fontRegular));
         emptyLocCell.setPadding(4f);
         emptyLocCell.setBorderColor(GRID_COLOR);
+        emptyLocCell.setBackgroundColor(HEADER_BG_COLOR);
         table.addCell(emptyLocCell);
 
         // Table Footer 2: Total PT row
@@ -152,6 +157,7 @@ public class PersonDaysPdfRenderer {
         totalPtLabelCell.setColspan(2);
         totalPtLabelCell.setBorderColor(GRID_COLOR);
         totalPtLabelCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        totalPtLabelCell.setBackgroundColor(HEADER_BG_COLOR);
         table.addCell(totalPtLabelCell);
 
         PdfPCell totalPtValCell = new PdfPCell(new Phrase(formatPt(totalPtSum), fontBold));
@@ -159,6 +165,7 @@ public class PersonDaysPdfRenderer {
         totalPtValCell.setColspan(totalCols - 2);
         totalPtValCell.setBorderColor(GRID_COLOR);
         totalPtValCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        totalPtValCell.setBackgroundColor(HEADER_BG_COLOR);
         table.addCell(totalPtValCell);
 
         document.add(table);
@@ -176,6 +183,7 @@ public class PersonDaysPdfRenderer {
         cell.setPadding(4f);
         cell.setHorizontalAlignment(alignment);
         cell.setBorderColor(GRID_COLOR);
+        cell.setBackgroundColor(HEADER_BG_COLOR);
         return cell;
     }
 

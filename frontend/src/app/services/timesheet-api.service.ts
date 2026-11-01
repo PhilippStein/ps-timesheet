@@ -50,6 +50,18 @@ export class TimesheetApiService {
     });
   }
 
+  downloadDocx(projectName: string, year: number, month: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/${year}/${month}/docx`, {
+      responseType: 'blob'
+    });
+  }
+
+  downloadXlsx(projectName: string, year: number, month: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/${year}/${month}/xlsx`, {
+      responseType: 'blob'
+    });
+  }
+
   getProjectStats(projectName: string, year?: number | null): Observable<ProjectStats> {
     let url = `${this.baseUrl}/api/timesheets/${encodeURIComponent(projectName)}/stats`;
     if (year != null) {

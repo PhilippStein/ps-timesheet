@@ -46,7 +46,7 @@ import { PdfExportConfig } from '../../models/project.model';
         </div>
 
         <div class="setting-item">
-          <label class="section-label">PDF-Export &amp; Briefpapier (Global):</label>
+          <label class="section-label">Export &amp; Briefpapier (Global):</label>
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Briefpapier Vorlage (PDF Pfad)</mat-label>
             <input matInput [(ngModel)]="templatePdfPath" placeholder="z.B. ~/briefpapier.pdf">
